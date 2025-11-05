@@ -7,20 +7,51 @@ require_login();
 
 $id = $_GET['id'] ?? null;
 $inventory = get_inventory_by_id($pdo, $id);
-if (!$inventory) die("Record not found");
+if (!$inventory) die("Inventory record not found.");
 
 include '../../includes/header.php';
 ?>
 
-<h2>View Inventory Record</h2>
+<main class="main-content">
 
-<p><strong>Product:</strong> <?= htmlspecialchars($inventory['product_name']) ?></p>
-<p><strong>Stock In:</strong> <?= $inventory['stock_in'] ?></p>
-<p><strong>Stock Out:</strong> <?= $inventory['stock_out'] ?></p>
-<p><strong>Current Stock:</strong> <?= $inventory['current_stock'] ?></p>
-<p><strong>Last Updated:</strong> <?= $inventory['last_updated'] ?></p>
+    <!-- Page Header -->
+    <div class="card mb-sm" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Inventory Record #<?= htmlspecialchars($inventory['inventory_id']) ?></h2>
+        <div class="flex gap-md">
+            <a href="edit.php?id=<?= $inventory['inventory_id'] ?>" class="btn btn-primary">Edit</a>
+            <a href="delete.php?id=<?= $inventory['inventory_id'] ?>" class="btn btn-danger">Delete</a>
+            <a href="index.php" class="btn btn-secondary">Back to Inventory</a>
+        </div>
+    </div>
 
-<a href="edit.php?id=<?= $inventory['inventory_id'] ?>">Edit</a> |
-<a href="index.php">Back</a>
+    <!-- Details Table -->
+    <div class="card">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Product</th>
+                    <td><?= htmlspecialchars($inventory['product_name']) ?></td>
+                </tr>
+                <tr>
+                    <th>Stock In</th>
+                    <td><?= (int)$inventory['stock_in'] ?></td>
+                </tr>
+                <tr>
+                    <th>Stock Out</th>
+                    <td><?= (int)$inventory['stock_out'] ?></td>
+                </tr>
+                <tr>
+                    <th>Current Stock</th>
+                    <td><?= (int)$inventory['current_stock'] ?></td>
+                </tr>
+                <tr>
+                    <th>Last Updated</th>
+                    <td><?= htmlspecialchars($inventory['last_updated']) ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

@@ -12,7 +12,7 @@ $_SESSION['last_activity'] = time();
 // Redirect if not logged in
 function require_login() {
     if (!isset($_SESSION['user_id'])) {
-        header('Location: /login.php');
+        header('Location: ' . BASE_URL . 'login.php');
         exit();
     }
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 04, 2025 at 10:43 AM
+-- Generation Time: Nov 05, 2025 at 07:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -42,8 +42,8 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`customer_id`, `name`, `phone`, `email`, `region`, `source`, `created_at`) VALUES
-(2, 'pluto', '255745202847', 'ski@mail.com', 'kigoma', 'walk-in', '2025-11-04 08:29:32'),
-(3, 'himson', '154545', 'himhim@him.com', 'kagera', 'instagram', '2025-11-04 08:52:15');
+(2, 'pluto', '255745202847', 'ski@mail.com', 'kigoma', 'instagram', '2025-11-04 08:29:32'),
+(4, 'Emson Maro', '0746805496', 'maroemson@mail.com', 'daressalaam', 'whatsapp', '2025-11-05 15:37:00');
 
 -- --------------------------------------------------------
 
@@ -60,6 +60,14 @@ CREATE TABLE `expenses` (
   `payment_method` enum('cash','bank','mobile_money') DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `expenses`
+--
+
+INSERT INTO `expenses` (`expense_id`, `category`, `description`, `amount`, `expense_date`, `payment_method`, `created_at`) VALUES
+(4, 'Staff', 'mshahara', 150000.00, '2025-11-05', 'cash', '2025-11-05 15:46:29'),
+(5, 'Transport', 'bodaboda kutoka posta', 5000.00, '2025-11-05', 'cash', '2025-11-05 15:52:57');
 
 -- --------------------------------------------------------
 
@@ -81,7 +89,8 @@ CREATE TABLE `inventory` (
 --
 
 INSERT INTO `inventory` (`inventory_id`, `product_id`, `stock_in`, `stock_out`, `last_updated`) VALUES
-(1, 6, 63, 3, '2025-11-04 10:27:32');
+(4, 9, 36, 0, '2025-11-05 15:20:19'),
+(5, 12, 3, 0, '2025-11-05 20:47:43');
 
 -- --------------------------------------------------------
 
@@ -107,7 +116,8 @@ INSERT INTO `logs` (`log_id`, `user_id`, `action`, `module`, `record_id`, `detai
 (1, 1, 'update', 'settings', NULL, 'Updated low_stock_threshold to 5', '2025-11-04 08:58:07'),
 (2, 1, 'update', 'settings', NULL, 'Updated store_name to Perfect Scents', '2025-11-04 08:58:07'),
 (3, 1, 'update', 'settings', NULL, 'Updated tax_rate to 18', '2025-11-04 08:58:07'),
-(4, 1, 'delete', 'purchases', 5, 'Deleted purchase and associated items', '2025-11-04 10:14:35');
+(4, 1, 'delete', 'purchases', 5, 'Deleted purchase and associated items', '2025-11-04 10:14:35'),
+(5, 1, 'delete', 'purchases', 4, 'Deleted purchase and associated items', '2025-11-04 13:47:48');
 
 -- --------------------------------------------------------
 
@@ -124,6 +134,13 @@ CREATE TABLE `marketing` (
   `sales_generated` decimal(10,2) DEFAULT 0.00,
   `remarks` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `marketing`
+--
+
+INSERT INTO `marketing` (`campaign_id`, `platform`, `start_date`, `end_date`, `budget`, `sales_generated`, `remarks`) VALUES
+(2, 'Facebook', '2025-10-26', '2025-11-03', 250000.00, 735000.00, 'Amazing');
 
 -- --------------------------------------------------------
 
@@ -150,7 +167,9 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `name`, `brand`, `category`, `size_ml`, `cost_price`, `retail_price`, `supplier_id`, `status`, `created_at`, `description`) VALUES
-(6, 'forpluto', 'ski', 'whonkowszz', 100.00, 35000.00, 150000.00, 1, 'active', '2025-11-04 09:24:03', 'yessir');
+(9, 'forpluto', 'LifeSki', 'ForPz', 125.00, 300000.00, 9500000.00, 1, 'active', '2025-11-04 13:47:23', 'balaa'),
+(11, 'system', 'systematic', 'systematically', 125.00, 125000.00, 750000.00, 3, 'active', '2025-11-05 14:04:16', 'ni hatari'),
+(12, 'givenchy', 'ski', 'cool', 75.00, 45000.00, 350000.00, 1, 'active', '2025-11-05 20:47:07', 'ni balaa');
 
 -- --------------------------------------------------------
 
@@ -173,7 +192,10 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`purchase_id`, `supplier_id`, `invoice_number`, `total_cost`, `purchase_date`, `payment_method`, `created_at`) VALUES
-(4, 1, '41', 1080000.00, '2025-11-04', 'cash', '2025-11-04 10:14:10');
+(6, 1, '1497', 7800000.00, '2025-11-04', 'cash', '2025-11-04 13:48:37'),
+(7, 1, '13146', 1890000.00, '2025-11-05', 'cash', '2025-11-05 13:16:32'),
+(8, 3, '1289', 1260000.00, '2025-11-05', 'bank', '2025-11-05 15:20:19'),
+(9, 1, '2332', 135000.00, '2025-11-05', 'cash', '2025-11-05 20:47:43');
 
 -- --------------------------------------------------------
 
@@ -194,7 +216,11 @@ CREATE TABLE `purchase_items` (
 --
 
 INSERT INTO `purchase_items` (`id`, `purchase_id`, `product_id`, `quantity`, `cost_per_unit`) VALUES
-(8, 4, 6, 24, 45000.00);
+(12, 6, 9, 12, 650000.00),
+(13, 7, 9, 3, 150000.00),
+(14, 7, 11, 2, 720000.00),
+(15, 8, 9, 36, 35000.00),
+(16, 9, 12, 3, 45000.00);
 
 -- --------------------------------------------------------
 
@@ -210,6 +236,15 @@ CREATE TABLE `returns` (
   `reason` text DEFAULT NULL,
   `return_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `returns`
+--
+
+INSERT INTO `returns` (`return_id`, `sale_id`, `product_id`, `quantity`, `reason`, `return_date`) VALUES
+(10, 8, 9, 2, 'loose caps', '2025-11-04 14:03:53'),
+(11, 10, 9, 1, 'damaged on transit', '2025-11-05 14:56:58'),
+(12, 8, 9, 1, 'customer not satisfied', '2025-11-05 14:58:19');
 
 -- --------------------------------------------------------
 
@@ -232,7 +267,8 @@ CREATE TABLE `sales` (
 --
 
 INSERT INTO `sales` (`sale_id`, `customer_id`, `sale_date`, `total_amount`, `payment_method`, `sales_channel`, `discount`) VALUES
-(6, 2, '2025-11-04 10:20:55', 491000.00, 'cash', 'store', 34000.00);
+(8, NULL, '2025-11-04 13:49:32', 9465000.00, 'cash', 'online', 35000.00),
+(10, NULL, '2025-11-05 09:21:32', 435000.00, 'cash', 'store', 15000.00);
 
 -- --------------------------------------------------------
 
@@ -253,7 +289,8 @@ CREATE TABLE `sale_items` (
 --
 
 INSERT INTO `sale_items` (`id`, `sale_id`, `product_id`, `quantity`, `unit_price`) VALUES
-(5, 6, 6, 3, 175000.00);
+(11, 10, 9, 4, 150000.00),
+(12, 8, 9, 2, 9500000.00);
 
 -- --------------------------------------------------------
 
@@ -274,9 +311,9 @@ CREATE TABLE `settings` (
 --
 
 INSERT INTO `settings` (`setting_id`, `name`, `value`, `description`, `updated_at`) VALUES
-(1, 'store_name', 'Perfect Scents', 'Store name for headers and invoices', '2025-11-04 09:03:32'),
-(2, 'tax_rate', '18', 'Tax rate in percent', '2025-11-04 09:03:32'),
-(3, 'low_stock_threshold', '5', 'Stock level that triggers low-stock alerts', '2025-11-04 09:03:32');
+(1, 'store_name', 'Perfect Scents', 'Store name for headers and invoices', '2025-11-05 20:30:19'),
+(2, 'tax_rate', '18', 'Tax rate in percent', '2025-11-05 20:30:19'),
+(3, 'low_stock_threshold', '5', 'Stock level that triggers low-stock alerts', '2025-11-05 20:30:19');
 
 -- --------------------------------------------------------
 
@@ -300,7 +337,8 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `name`, `contact_person`, `phone`, `email`, `address`, `reliability_score`, `created_at`) VALUES
-(1, 'pluto', 'madaraski', '45', 'ski@mail.com', 'kigoma', 9.60, '2025-11-04 09:17:27');
+(1, 'pluto', 'madaraski', '45', 'ski@mail.com', 'kigoma', 9.60, '2025-11-04 09:17:27'),
+(3, 'Selebonge', 'sele', '658', 'sele@bonge.com', 'kinondoni', 7.90, '2025-11-04 13:21:35');
 
 -- --------------------------------------------------------
 
@@ -433,67 +471,67 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `expenses`
 --
 ALTER TABLE `expenses`
-  MODIFY `expense_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `expense_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `inventory`
 --
 ALTER TABLE `inventory`
-  MODIFY `inventory_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `inventory_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `marketing`
 --
 ALTER TABLE `marketing`
-  MODIFY `campaign_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `campaign_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `purchase_items`
 --
 ALTER TABLE `purchase_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `returns`
 --
 ALTER TABLE `returns`
-  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `sale_items`
 --
 ALTER TABLE `sale_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -505,7 +543,7 @@ ALTER TABLE `settings`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`

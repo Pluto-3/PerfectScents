@@ -6,6 +6,7 @@ require_once '../../includes/functions.php';
 require_login();
 
 if (!isset($_GET['id'])) die("Product ID missing.");
+
 $product_id = (int)$_GET['id'];
 $product = get_product_by_id($pdo, $product_id);
 if (!$product) die("Product not found.");
@@ -15,24 +16,38 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
-    $brand = trim($_POST['brand'] ?: null);
-    $category = trim($_POST['category'] ?: null);
+    $brand = trim($_POST['brand'] ?? '');
+    $category = trim($_POST['category'] ?? '');
     $size_ml = $_POST['size_ml'] !== '' ? (float)$_POST['size_ml'] : null;
-    $cost_price = (float)$_POST['cost_price'];
-    $retail_price = (float)$_POST['retail_price'];
+    $cost_price = (float)($_POST['cost_price'] ?? 0);
+    $retail_price = (float)($_POST['retail_price'] ?? 0);
     $supplier_id = $_POST['supplier_id'] !== '' ? (int)$_POST['supplier_id'] : null;
-    $status = $_POST['status'];
-    $description = trim($_POST['description']);
+    $status = $_POST['status'] ?? 'active';
+    $description = trim($_POST['description'] ?? '');
 
     if (!$name) $errors[] = "Product name is required.";
-    if ($cost_price <= 0) $errors[] = "Cost price must be positive.";
-    if ($retail_price <= 0) $errors[] = "Retail price must be positive.";
+    if ($cost_price <= 0) $errors[] = "Cost price must be greater than zero.";
+    if ($retail_price <= 0) $errors[] = "Retail price must be greater than zero.";
 
     if (!$errors) {
         try {
-            edit_product($pdo, $product_id, $name, $brand, $category, $size_ml, $cost_price, $retail_price, $supplier_id, $status, $description);
+            edit_product(
+                $pdo,
+                $product_id,
+                $name,
+                $brand,
+                $category,
+                $size_ml,
+                $cost_price,
+                $retail_price,
+                $supplier_id,
+                $status,
+                $description
+            );
             $success = "Product updated successfully.";
             $product = get_product_by_id($pdo, $product_id);
+            header('Location: index.php');
+            exit;
         } catch (Exception $e) {
             $errors[] = $e->getMessage();
         }
@@ -41,63 +56,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch suppliers for dropdown
 $suppliers = $pdo->query("SELECT supplier_id, name FROM suppliers ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
-
-include '../../includes/header.php';
 ?>
 
-<h2>Edit Product</h2>
+<?php include '../../includes/header.php'; ?>
 
-<?php if ($errors): ?>
-    <ul style="color:red;">
-        <?php foreach ($errors as $err) echo "<li>$err</li>"; ?>
-    </ul>
-<?php endif; ?>
+<main class="main-content">
 
-<?php if ($success): ?>
-    <p style="color:green;"><?= htmlspecialchars($success) ?></p>
-<?php endif; ?>
+    <!-- Header -->
+    <div class="card mb-sm" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Edit Product</h2>
+    </div>
 
-<form method="post">
-    <label>Name:</label>
-    <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>" required><br>
+    <!-- Form Card -->
+    <div class="card form-card">
+        <?php if ($errors): ?>
+            <div class="alert alert-danger mb-md">
+                <ul>
+                    <?php foreach ($errors as $err): ?>
+                        <li><?= htmlspecialchars($err) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
 
-    <label>Brand:</label>
-    <input type="text" name="brand" value="<?= htmlspecialchars($product['brand']) ?>"><br>
+        <?php if ($success): ?>
+            <div class="alert alert-success mb-md">
+                <?= htmlspecialchars($success) ?>
+            </div>
+        <?php endif; ?>
 
-    <label>Category:</label>
-    <input type="text" name="category" value="<?= htmlspecialchars($product['category']) ?>"><br>
+        <form method="POST" class="form-grid">
 
-    <label>Size (ml):</label>
-    <input type="number" step="0.01" name="size_ml" value="<?= htmlspecialchars($product['size_ml']) ?>"><br>
+            <div class="form-group">
+                <label for="name">Product Name<span class="required">*</span></label>
+                <input type="text" id="name" name="name" required value="<?= htmlspecialchars($product['name']) ?>">
+            </div>
 
-    <label>Cost Price:</label>
-    <input type="number" step="0.01" name="cost_price" value="<?= htmlspecialchars($product['cost_price']) ?>" required><br>
+            <div class="form-group">
+                <label for="brand">Brand</label>
+                <input type="text" id="brand" name="brand" value="<?= htmlspecialchars($product['brand']) ?>">
+            </div>
 
-    <label>Retail Price:</label>
-    <input type="number" step="0.01" name="retail_price" value="<?= htmlspecialchars($product['retail_price']) ?>" required><br>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input type="text" id="category" name="category" value="<?= htmlspecialchars($product['category']) ?>">
+            </div>
 
-    <label>Supplier:</label>
-    <select name="supplier_id">
-        <option value="">-- Select Supplier --</option>
-        <?php foreach ($suppliers as $s): ?>
-            <option value="<?= $s['supplier_id'] ?>" <?= $s['supplier_id'] == $product['supplier_id'] ? 'selected' : '' ?>>
-                <?= htmlspecialchars($s['name']) ?>
-            </option>
-        <?php endforeach; ?>
-    </select><br>
+            <div class="form-group">
+                <label for="size_ml">Size (ml)</label>
+                <input type="number" id="size_ml" name="size_ml" step="0.01" value="<?= htmlspecialchars($product['size_ml']) ?>">
+            </div>
 
-    <label>Status:</label>
-    <select name="status">
-        <option value="active" <?= $product['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-        <option value="discontinued" <?= $product['status'] === 'discontinued' ? 'selected' : '' ?>>Discontinued</option>
-    </select><br>
+            <div class="form-group">
+                <label for="cost_price">Cost Price<span class="required">*</span></label>
+                <input type="number" id="cost_price" name="cost_price" step="0.01" required value="<?= htmlspecialchars($product['cost_price']) ?>">
+            </div>
 
-    <label>Description:</label>
-    <textarea name="description" required><?= htmlspecialchars($product['description']) ?></textarea><br>
+            <div class="form-group">
+                <label for="retail_price">Retail Price<span class="required">*</span></label>
+                <input type="number" id="retail_price" name="retail_price" step="0.01" required value="<?= htmlspecialchars($product['retail_price']) ?>">
+            </div>
 
-    <button type="submit">Update Product</button>
-</form>
+            <div class="form-group">
+                <label for="supplier_id">Supplier</label>
+                <select id="supplier_id" name="supplier_id">
+                    <option value="">-- Select Supplier --</option>
+                    <?php foreach ($suppliers as $s): ?>
+                        <option value="<?= $s['supplier_id'] ?>" <?= $s['supplier_id'] == $product['supplier_id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($s['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-<a href="index.php">Cancel</a>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="active" <?= $product['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                    <option value="discontinued" <?= $product['status'] === 'discontinued' ? 'selected' : '' ?>>Discontinued</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="description">Description<span class="required">*</span></label>
+                <textarea id="description" name="description" rows="4" required><?= htmlspecialchars($product['description']) ?></textarea>
+            </div>
+
+            <div class="form-actions mt-md">
+                <button type="submit" class="btn btn-primary">Update Product</button>
+                <a href="index.php" class="btn btn-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

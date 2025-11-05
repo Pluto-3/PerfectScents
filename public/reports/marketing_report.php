@@ -5,16 +5,11 @@ require_once '../../includes/functions.php';
 
 require_login();
 
-?>
+include '../../includes/header.php';
 
-<?php include '../../includes/header.php'; ?>
-
-<h2>Marketing Report</h2>
-
-<?php
 try {
     $stmt = $pdo->query("
-        SELECT campaign_id, platform, start_date, end_date, budget, sales_generated, (sales_generated - budget) AS roi, remarks
+        SELECT campaign_id, platform, start_date, end_date, budget, sales_generated, remarks
         FROM marketing
         ORDER BY start_date DESC
     ");
@@ -24,29 +19,22 @@ try {
 }
 ?>
 
-<table border="1" cellpadding="5" cellspacing="0">
-    <tr>
-        <th>Campaign ID</th>
-        <th>Platform</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Budget</th>
-        <th>Sales Generated</th>
-        <th>ROI</th>
-        <th>Remarks</th>
-    </tr>
-    <?php foreach ($campaigns as $c): ?>
-    <tr>
-        <td><?= (int)$c['campaign_id'] ?></td>
-        <td><?= htmlspecialchars($c['platform']) ?></td>
-        <td><?= htmlspecialchars($c['start_date']) ?></td>
-        <td><?= htmlspecialchars($c['end_date']) ?></td>
-        <td><?= CURRENCY ?> <?= number_format($c['budget'], 2) ?></td>
-        <td><?= CURRENCY ?> <?= number_format($c['sales_generated'], 2) ?></td>
-        <td><?= CURRENCY ?> <?= number_format($c['roi'], 2) ?></td>
-        <td><?= htmlspecialchars($c['remarks'] ?? '-') ?></td>
-    </tr>
+<main class="main-content">
+    <div class="card mb-sm">
+        <h2>Marketing Report</h2>
+    </div>
+
+    <?php foreach ($campaigns as $c): 
+        $roi = ($c['budget'] > 0) ? $c['sales_generated'] - $c['budget'] : 0;
+    ?>
+    <div class="card mb-md">
+        <h3>Campaign No <?= (int)$c['campaign_id'] ?> : <?= htmlspecialchars($c['platform']) ?></h3>
+        <p>Start: <?= htmlspecialchars($c['start_date']) ?> | End: <?= htmlspecialchars($c['end_date']) ?></p>
+        <p>Budget: <?= CURRENCY ?> <?= number_format($c['budget'], 2) ?> | Sales Generated: <?= CURRENCY ?> <?= number_format($c['sales_generated'], 2) ?> | ROI: <?= CURRENCY ?> <?= number_format($roi, 2) ?></p>
+        <p><strong>Remarks:</strong> <?= nl2br(htmlspecialchars($c['remarks'] ?? '-')) ?></p>
+    </div>
     <?php endforeach; ?>
-</table>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

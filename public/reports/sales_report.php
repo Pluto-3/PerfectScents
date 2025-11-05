@@ -4,13 +4,9 @@ require_once '../../includes/session.php';
 require_once '../../includes/functions.php';
 
 require_login();
-?>
 
-<?php include '../../includes/header.php'; ?>
+include '../../includes/header.php';
 
-<h2>Sales Report</h2>
-
-<?php
 try {
     $stmt = $pdo->query("
         SELECT s.sale_id, s.sale_date, c.name AS customer_name, s.total_amount, s.payment_method, s.discount,
@@ -25,35 +21,58 @@ try {
 } catch (PDOException $e) {
     die("Failed to fetch sales report: " . htmlspecialchars($e->getMessage()));
 }
+
+// Group sales by sale_id for cleaner display
+$sales_grouped = [];
+foreach ($sales as $row) {
+    $sale_id = $row['sale_id'];
+    if (!isset($sales_grouped[$sale_id])) {
+        $sales_grouped[$sale_id] = [
+            'sale_date' => $row['sale_date'],
+            'customer_name' => $row['customer_name'] ?? 'Walk-in',
+            'total_amount' => $row['total_amount'],
+            'discount' => $row['discount'],
+            'payment_method' => $row['payment_method'],
+            'items' => []
+        ];
+    }
+    $sales_grouped[$sale_id]['items'][] = $row;
+}
 ?>
 
-<table border="1" cellpadding="5" cellspacing="0">
-    <tr>
-        <th>Sale ID</th>
-        <th>Date</th>
-        <th>Customer</th>
-        <th>Product</th>
-        <th>Quantity</th>
-        <th>Unit Price</th>
-        <th>Subtotal</th>
-        <th>Total</th>
-        <th>Discount</th>
-        <th>Payment Method</th>
-    </tr>
-    <?php foreach ($sales as $sale): ?>
-    <tr>
-        <td><?= (int)$sale['sale_id'] ?></td>
-        <td><?= htmlspecialchars($sale['sale_date']) ?></td>
-        <td><?= htmlspecialchars($sale['customer_name'] ?? 'Walk-in') ?></td>
-        <td><?= htmlspecialchars($sale['product_name']) ?></td>
-        <td><?= (int)$sale['quantity'] ?></td>
-        <td><?= CURRENCY ?> <?= number_format($sale['unit_price'], 2) ?></td>
-        <td><?= CURRENCY ?> <?= number_format($sale['subtotal'], 2) ?></td>
-        <td><?= CURRENCY ?> <?= number_format($sale['total_amount'], 2) ?></td>
-        <td><?= CURRENCY ?> <?= number_format($sale['discount'], 2) ?></td>
-        <td><?= htmlspecialchars($sale['payment_method']) ?></td>
-    </tr>
+<main class="main-content">
+    <div class="card mb-sm">
+        <h2>Sales Report</h2>
+    </div>
+
+    <?php foreach ($sales_grouped as $sale_id => $sale): ?>
+    <div class="card mb-md">
+        <h3>Sale #<?= $sale_id ?> | <?= htmlspecialchars($sale['sale_date']) ?> | <?= htmlspecialchars($sale['customer_name']) ?></h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($sale['items'] as $item): ?>
+                <tr>
+                    <td><?= htmlspecialchars($item['product_name']) ?></td>
+                    <td><?= (int)$item['quantity'] ?></td>
+                    <td><?= CURRENCY ?> <?= number_format($item['unit_price'], 2) ?></td>
+                    <td><?= CURRENCY ?> <?= number_format($item['subtotal'], 2) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p><strong>Total:</strong> <?= CURRENCY ?> <?= number_format($sale['total_amount'], 2) ?> |
+           <strong>Discount:</strong> <?= CURRENCY ?> <?= number_format($sale['discount'], 2) ?> |
+           <strong>Payment:</strong> <?= htmlspecialchars($sale['payment_method']) ?></p>
+    </div>
     <?php endforeach; ?>
-</table>
+</main>
 
 <?php include '../../includes/footer.php'; ?>

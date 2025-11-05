@@ -33,51 +33,77 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 include '../../includes/header.php';
 ?>
 
-<h2>Sale Details - #<?= htmlspecialchars($sale['sale_id']) ?></h2>
+<main class="main-content">
 
-<!-- ===== Sale Info Block ===== -->
-<section style="border:1px solid #ccc; padding:10px; margin-bottom:15px;">
-    <h3>Sale Information</h3>
-    <p><strong>Customer:</strong> <?= htmlspecialchars($sale['customer_name'] ?? 'Walk-in') ?></p>
-    <p><strong>Sale Date:</strong> <?= htmlspecialchars($sale['sale_date']) ?></p>
-    <p><strong>Payment Method:</strong> <?= htmlspecialchars($sale['payment_method']) ?></p>
-    <p><strong>Sales Channel:</strong> <?= htmlspecialchars($sale['sales_channel']) ?></p>
-    <p><strong>Discount:</strong> <?= number_format($sale['discount'], 2) ?></p>
-</section>
-
-<!-- ===== Items Block ===== -->
-<section style="border:1px solid #ccc; padding:10px; margin-bottom:15px;">
-    <h3>Items in this Sale</h3>
-
-    <?php if ($items): 
-        $total_amount = 0;
-        foreach ($items as $item): 
-            $subtotal = $item['quantity'] * $item['unit_price'];
-            $total_amount += $subtotal;
-    ?>
-        <div style="border:1px solid #eee; padding:8px; margin-bottom:8px;">
-            <p><strong>Product:</strong> <?= htmlspecialchars($item['product_name']) ?></p>
-            <p><strong>Brand:</strong> <?= htmlspecialchars($item['brand']) ?></p>
-            <p><strong>Category:</strong> <?= htmlspecialchars($item['category']) ?></p>
-            <p><strong>Size:</strong> <?= htmlspecialchars($item['size_ml']) ?> ml</p>
-            <p><strong>Quantity:</strong> <?= (int)$item['quantity'] ?></p>
-            <p><strong>Unit Price:</strong> <?= number_format($item['unit_price'], 2) ?></p>
-            <p><strong>Subtotal:</strong> <?= number_format($subtotal, 2) ?></p>
+    <!-- ===== Sale Header Info ===== -->
+    <div class="card mb-sm">
+        <h2 class="card-title">Sale Details - #<?= htmlspecialchars($sale['sale_id']) ?></h2>
+        <div class="sale-info">
+            <p><strong>Customer:</strong> <?= htmlspecialchars($sale['customer_name'] ?? 'Walk-in') ?></p>
+            <p><strong>Sale Date:</strong> <?= htmlspecialchars($sale['sale_date']) ?></p>
+            <p><strong>Payment Method:</strong> <?= htmlspecialchars($sale['payment_method']) ?></p>
+            <p><strong>Sales Channel:</strong> <?= htmlspecialchars($sale['sales_channel']) ?></p>
+            <p><strong>Discount:</strong> <?= number_format($sale['discount'], 2) ?></p>
         </div>
-    <?php endforeach; ?>
-    <?php else: ?>
-        <p>No items found for this sale.</p>
-    <?php endif; ?>
-</section>
+    </div>
 
-<!-- ===== Total Block ===== -->
-<section style="border:1px solid #ccc; padding:10px;">
-    <h3>Total</h3>
-    <p><strong>Total Amount (after discount):</strong> <?= number_format($total_amount - $sale['discount'], 2) ?></p>
-</section>
+    <!-- ===== Items Table ===== -->
+    <div class="card mb-sm">
+        <h3 class="card-title">Items in this Sale</h3>
 
-<p>
-    <a href="index.php">Back to Sales</a>
-</p>
+        <?php if ($items): 
+            $total_amount = 0;
+        ?>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Brand</th>
+                    <th>Category</th>
+                    <th>Size (ml)</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($items as $item): 
+                    $subtotal = $item['quantity'] * $item['unit_price'];
+                    $total_amount += $subtotal;
+                ?>
+                <tr>
+                    <td><?= htmlspecialchars($item['product_name']) ?></td>
+                    <td><?= htmlspecialchars($item['brand']) ?></td>
+                    <td><?= htmlspecialchars($item['category']) ?></td>
+                    <td><?= htmlspecialchars($item['size_ml']) ?></td>
+                    <td><?= (int)$item['quantity'] ?></td>
+                    <td><?= number_format($item['unit_price'], 2) ?></td>
+                    <td><?= number_format($subtotal, 2) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <?php else: ?>
+        <div class="alert alert-info">No items found for this sale.</div>
+        <?php endif; ?>
+    </div>
+
+    <!-- ===== Total ===== -->
+    <div class="card card-total mb-sm">
+        <p><strong>Subtotal:</strong> <?= number_format($total_amount, 2) ?></p>
+        <p><strong>Discount:</strong> <?= number_format($sale['discount'], 2) ?></p>
+        <hr>
+        <p><strong>Total Amount:</strong> <?= number_format($total_amount - $sale['discount'], 2) ?></p>
+    </div>
+
+
+    <!-- ===== Back Button ===== -->
+    <div class="mt-sm">
+        <a href="index.php" class="btn btn-secondary">Back to Sales</a>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>
+

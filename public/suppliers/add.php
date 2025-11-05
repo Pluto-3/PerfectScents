@@ -31,20 +31,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include '../../includes/header.php'; ?>
 
-<h2>Add Supplier</h2>
+<main class="main-content">
 
-<?php if ($error): ?>
-<p style="color:red"><?= htmlspecialchars($error) ?></p>
-<?php endif; ?>
+    <div class="card mb-sm">
+        <h2>Add Supplier</h2>
+    </div>
 
-<form method="POST">
-    <label>Name: <input type="text" name="name" required></label><br>
-    <label>Contact Person: <input type="text" name="contact_person"></label><br>
-    <label>Phone: <input type="text" name="phone"></label><br>
-    <label>Email: <input type="email" name="email"></label><br>
-    <label>Address: <textarea name="address"></textarea></label><br>
-    <label>Reliability Score: <input type="number" name="reliability_score" step="0.01" min="0" max="10" value="0"></label><br>
-    <button type="submit">Save Supplier</button>
-</form>
+    <?php if ($error): ?>
+        <div class="alert alert-error mb-sm">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="card">
+        <form method="POST" class="form-grid">
+            <div class="form-group">
+                <label for="name">Name <span class="text-danger">*</span></label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="contact_person">Contact Person</label>
+                <input type="text" id="contact_person" name="contact_person">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="reliability_score">Reliability Score</label>
+                <input type="number" id="reliability_score" name="reliability_score" step="0.01" min="0" max="10" value="0">
+            </div>
+
+            <div class="form-actions mt-sm">
+                <button type="submit" class="btn btn-primary">Save Supplier</button>
+                <a href="index.php" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

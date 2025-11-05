@@ -4,7 +4,6 @@ require_once '../../includes/session.php';
 require_once '../../includes/functions.php';
 
 require_login();
-
 ?>
 
 <?php include '../../includes/header.php'; ?>
@@ -23,18 +22,25 @@ try {
     $stmt->execute(['threshold' => STOCK_THRESHOLD]);
     $items = $stmt->fetchAll();
 } catch (PDOException $e) {
-    die("Failed to fetch low stock report: " . htmlspecialchars($e->getMessage()));
+    die('Failed to fetch low stock report: ' . htmlspecialchars($e->getMessage()));
 }
 ?>
 
 <?php if (!empty($items)): ?>
-    <ul>
-        <?php foreach ($items as $item): ?>
-            <li><?= htmlspecialchars($item['name']) ?> - <?= (int)$item['current_stock'] ?> units</li>
-        <?php endforeach; ?>
-    </ul>
+<table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+        <th>Product</th>
+        <th>Current Stock</th>
+    </tr>
+    <?php foreach ($items as $item): ?>
+    <tr>
+        <td><?= htmlspecialchars($item['name']) ?></td>
+        <td><?= (int)$item['current_stock'] ?></td>
+    </tr>
+    <?php endforeach; ?>
+</table>
 <?php else: ?>
-    <p>No low-stock items (all products above <?= STOCK_THRESHOLD ?> units).</p>
+<p>No low-stock items (all products above <?= STOCK_THRESHOLD ?> units).</p>
 <?php endif; ?>
 
 <?php include '../../includes/footer.php'; ?>

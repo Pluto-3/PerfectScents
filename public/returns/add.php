@@ -8,16 +8,25 @@ $errors = [];
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $sale_id = (int)$_POST['sale_id'];
-    $product_id = (int)$_POST['product_id'];
-    $quantity = (int)$_POST['quantity'];
-    $reason = trim($_POST['reason']);
+    $sale_id = (int)($_POST['sale_id'] ?? 0);
+    $product_id = (int)($_POST['product_id'] ?? 0);
+    $quantity = (int)($_POST['quantity'] ?? 0);
+    $reason = trim($_POST['reason'] ?? '');
 
-    try {
-        add_return($pdo, $sale_id, $product_id, $quantity, $reason);
-        $success = "Return added successfully.";
-    } catch (Exception $e) {
-        $errors[] = $e->getMessage();
+    if (!$sale_id) $errors[] = "Sale is required.";
+    if (!$product_id) $errors[] = "Product is required.";
+    if ($quantity <= 0) $errors[] = "Quantity must be greater than 0.";
+    if (!$reason) $errors[] = "Reason is required.";
+
+    if (empty($errors)) {
+        try {
+            add_return($pdo, $sale_id, $product_id, $quantity, $reason);
+            $success = "Return added successfully.";
+            header("Location: index.php");
+            exit;
+        } catch (Exception $e) {
+            $errors[] = $e->getMessage();
+        }
     }
 }
 
@@ -27,40 +36,69 @@ $products = $pdo->query("SELECT product_id, name FROM products WHERE status = 'a
 include '../../includes/header.php';
 ?>
 
-<h2>Add Product Return</h2>
+<main class="main-content">
 
-<?php if ($errors): ?>
-<ul style="color:red;"><?php foreach ($errors as $err) echo "<li>$err</li>"; ?></ul>
-<?php endif; ?>
+    <div class="card mb-sm">
+        <h2>Add Product Return</h2>
+    </div>
 
-<?php if ($success): ?>
-<p style="color:green;"><?= $success ?></p>
-<?php endif; ?>
+    <?php if ($errors): ?>
+        <div class="card mb-md">
+            <ul style="color:red; margin:0; padding:1em;">
+                <?php foreach ($errors as $err): ?>
+                    <li><?= htmlspecialchars($err) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 
-<form method="post">
-    <label>Sale ID:</label>
-    <select name="sale_id" required>
-        <option value="">Select Sale</option>
-        <?php foreach($sales as $s): ?>
-            <option value="<?= $s['sale_id'] ?>"><?= $s['sale_id'] ?></option>
-        <?php endforeach; ?>
-    </select><br>
+    <?php if ($success): ?>
+        <div class="card mb-md">
+            <p style="color:green; margin:0; padding:1em;"><?= htmlspecialchars($success) ?></p>
+        </div>
+    <?php endif; ?>
 
-    <label>Product:</label>
-    <select name="product_id" required>
-        <option value="">Select Product</option>
-        <?php foreach($products as $p): ?>
-            <option value="<?= $p['product_id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-        <?php endforeach; ?>
-    </select><br>
+    <div class="card">
+        <form method="post" class="form-grid">
 
-    <label>Quantity:</label>
-    <input type="number" name="quantity" min="1" required><br>
+            <div class="form-group">
+                <label for="sale_id">Sale ID <span class="text-danger">*</span></label>
+                <select id="sale_id" name="sale_id" required>
+                    <option value="">--Select Sale--</option>
+                    <?php foreach ($sales as $s): ?>
+                        <option value="<?= $s['sale_id'] ?>"><?= $s['sale_id'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-    <label>Reason:</label>
-    <textarea name="reason" required></textarea><br>
+            <div class="form-group">
+                <label for="product_id">Product <span class="text-danger">*</span></label>
+                <select id="product_id" name="product_id" required>
+                    <option value="">--Select Product--</option>
+                    <?php foreach ($products as $p): ?>
+                        <option value="<?= $p['product_id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-    <button type="submit">Add Return</button>
-</form>
+            <div class="form-group">
+                <label for="quantity">Quantity <span class="text-danger">*</span></label>
+                <input type="number" id="quantity" name="quantity" min="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reason">Reason <span class="text-danger">*</span></label>
+                <textarea id="reason" name="reason" rows="3" required></textarea>
+            </div>
+
+            <div class="form-actions mt-sm">
+                <button type="submit" class="btn btn-primary">Add Return</button>
+                <a href="index.php" class="btn btn-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

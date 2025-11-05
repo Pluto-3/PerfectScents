@@ -22,33 +22,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$sources = ['--select option--','walk-in','instagram','whatsapp','referral','other'];
+
+include '../../includes/header.php';
 ?>
 
-<?php include '../../includes/header.php'; ?>
+<main class="main-content">
 
-<h2>Add New Customer</h2>
+    <!-- Page Header -->
+    <div class="card mb-sm">
+        <h2>Add New Customer</h2>
+    </div>
 
-<?php if ($errors): ?>
-    <ul style="color:red">
-        <?php foreach($errors as $e) echo "<li>".htmlspecialchars($e)."</li>"; ?>
-    </ul>
-<?php endif; ?>
+    <!-- Errors -->
+    <?php if ($errors): ?>
+        <div class="card mb-md" style="color:red;">
+            <ul>
+                <?php foreach ($errors as $e): ?>
+                    <li><?= htmlspecialchars($e) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 
-<form method="POST">
-    <label>Name: <input type="text" name="name" required></label><br>
-    <label>Phone: <input type="text" name="phone"></label><br>
-    <label>Email: <input type="email" name="email"></label><br>
-    <label>Region: <input type="text" name="region"></label><br>
-    <label>Source: 
-        <select name="source">
-            <option value="walk-in">Walk-in</option>
-            <option value="instagram">Instagram</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="referral">Referral</option>
-            <option value="other">Other</option>
-        </select>
-    </label><br>
-    <button type="submit">Add Customer</button>
-</form>
+    <!-- Add Form -->
+    <div class="card">
+        <form method="POST">
+            <table class="table">
+                <tr>
+                    <th>Name <span style="color:red;">*</span></th>
+                    <td><input type="text" name="name" value="<?= htmlspecialchars($name ?? '') ?>" required></td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td><input type="text" name="phone" value="<?= htmlspecialchars($phone ?? '') ?>"></td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td><input type="email" name="email" value="<?= htmlspecialchars($email ?? '') ?>"></td>
+                </tr>
+                <tr>
+                    <th>Region</th>
+                    <td><input type="text" name="region" value="<?= htmlspecialchars($region ?? '') ?>"></td>
+                </tr>
+                <tr>
+                    <th>Source</th>
+                    <td>
+                        <select name="source">
+                            <?php foreach ($sources as $s): ?>
+                                <option value="<?= $s ?>" <?= (isset($source) && $s === $source) ? 'selected' : '' ?>>
+                                    <?= ucfirst($s) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="flex gap-md mt-sm">
+                <button type="submit" class="btn btn-primary">Add Customer</button>
+                <a href="index.php" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

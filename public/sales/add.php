@@ -48,56 +48,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include '../../includes/header.php'; ?>
 
-<h2>Add Sale</h2>
-
 <?php if ($error): ?>
-<p style="color:red"><?= htmlspecialchars($error) ?></p>
+<div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 
-<form method="POST" id="sale-form">
-    <label>Customer:
-        <select name="customer_id">
-            <option value="">Walk-in</option>
-            <?php foreach($customers as $c): ?>
-                <option value="<?= $c['customer_id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
-    </label><br><br>
+<main class="main-content">
+    <div class="card">
+        <h2 class="card-title">Add Sale</h2>
 
-    <label>Payment Method:
-        <select name="payment_method" required>
-            <option value="cash">Cash</option>
-            <option value="card">Card</option>
-            <option value="mobile_money">Mobile Money</option>
-            <option value="bank">Bank</option>
-        </select>
-    </label><br><br>
+        <?php if ($error): ?>
+        <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
 
-    <label>Sales Channel:
-        <select name="sales_channel" required>
-            <option value="store">Store</option>
-            <option value="online">Online</option>
-            <option value="whatsapp">WhatsApp</option>
-        </select>
-    </label><br><br>
+        <form method="POST" id="sale-form" class="form-grid">
+            <div class="form-group">
+                <label>Customer</label>
+                <select name="customer_id">
+                    <option value="">Walk-in</option>
+                    <?php foreach($customers as $c): ?>
+                        <option value="<?= $c['customer_id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-    <label>Discount:
-        <input type="number" name="discount" value="0" min="0" step="0.01">
-    </label><br><br>
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select name="payment_method" required>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="mobile_money">Mobile Money</option>
+                    <option value="bank">Bank</option>
+                </select>
+            </div>
 
-    <h3>Items</h3>
-    <table id="sale-items-table" border="1" cellpadding="5">
-        <tr>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Remove</th>
-        </tr>
-    </table>
-    <button type="button" onclick="addRow()">Add Product</button><br><br>
+            <div class="form-group">
+                <label>Sales Channel</label>
+                <select name="sales_channel" required>
+                    <option value="store">Store</option>
+                    <option value="online">Online</option>
+                    <option value="whatsapp">WhatsApp</option>
+                </select>
+            </div>
 
-    <button type="submit">Save Sale</button>
-</form>
+            <div class="form-group mb-sm">
+                <label>Discount</label>
+                <input type="number" name="discount" value="0" min="0" step="0.01">
+            </div>
+
+            <h3>Items</h3>
+            <table id="sale-items-table" class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <button type="button" class="btn btn-secondary" onclick="addRow()">Add Product</button>
+            <button type="submit" class="btn btn-primary">Save Sale</button>
+        </form>
+    </div>
+</main>
 
 <script>
 let rowIndex = 0;
@@ -114,7 +129,7 @@ ${products.map(p=>`<option value="${p.product_id}" ${product_id==p.product_id?'s
 </td>
 <td><input type="number" name="items[${rowIndex}][quantity]" value="${quantity}" min="1" required></td>
 <td><input type="number" name="items[${rowIndex}][unit_price]" value="${unit_price}" min="0" step="0.01" required></td>
-<td><button type="button" onclick="removeRow(this)">Remove</button></td>
+<td><button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button></td>
 `;
     rowIndex++;
 }

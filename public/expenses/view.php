@@ -6,36 +6,24 @@ require_once '../../includes/functions.php';
 require_login();
 
 $id = (int)($_GET['id'] ?? 0);
-
-// Fetch record first to confirm existence
 $stmt = $pdo->prepare("SELECT * FROM expenses WHERE expense_id = ?");
 $stmt->execute([$id]);
 $expense = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$expense) {
-    die("Expense not found.");
-}
-
-// If user confirmed deletion
-if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
-    $deleteStmt = $pdo->prepare("DELETE FROM expenses WHERE expense_id = ?");
-    $deleteStmt->execute([$id]);
-    header('Location: index.php');
-    exit;
-}
+if (!$expense) die("Expense not found.");
 
 include '../../includes/header.php';
 ?>
 
 <main class="main-content">
 
+    <!-- Page Header -->
     <div class="card mb-sm">
-        <h2>Confirm Deletion</h2>
+        <h2>Expense Details ID No: <?= htmlspecialchars($expense['expense_id']) ?></h2>
     </div>
 
+    <!-- Expense Details Table -->
     <div class="card">
-        <p>Are you sure you want to delete the following expense record?</p>
-
         <table class="table">
             <tbody>
                 <tr>
@@ -44,7 +32,7 @@ include '../../includes/header.php';
                 </tr>
                 <tr>
                     <th>Description</th>
-                    <td><?= htmlspecialchars($expense['description'] ?? '—') ?></td>
+                    <td><?= $expense['description'] ? nl2br(htmlspecialchars($expense['description'])) : '<em>No description</em>' ?></td>
                 </tr>
                 <tr>
                     <th>Amount (TZS)</th>
@@ -58,14 +46,22 @@ include '../../includes/header.php';
                     <th>Payment Method</th>
                     <td><?= htmlspecialchars(ucwords(str_replace('_', ' ', $expense['payment_method']))) ?></td>
                 </tr>
+                <tr>
+                    <th>Created At</th>
+                    <td><?= htmlspecialchars($expense['created_at'] ?? '—') ?></td>
+                </tr>
             </tbody>
         </table>
 
-        <form method="POST" class="mt-sm flex gap-md">
-            <input type="hidden" name="confirm" value="yes">
-            <button type="submit" class="btn btn-danger">Yes, Delete</button>
-            <a href="view.php?id=<?= $id ?>" class="btn btn-secondary">Cancel</a>
-        </form>
+        <!-- Action Buttons -->
+        <div class="flex gap-md mt-sm">
+            <a href="edit.php?id=<?= $id ?>" class="btn btn-primary">Edit</a>
+            <a href="delete.php?id=<?= $id ?>" class="btn btn-danger"
+               onclick="return confirm('Are you sure you want to delete this expense record?');">
+               Delete
+            </a>
+            <a href="index.php" class="btn btn-secondary">Back to List</a>
+        </div>
     </div>
 
 </main>

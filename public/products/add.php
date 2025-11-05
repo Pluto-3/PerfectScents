@@ -10,18 +10,18 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
-    $brand = trim($_POST['brand'] ?: null);
-    $category = trim($_POST['category'] ?: null);
+    $brand = trim($_POST['brand'] ?? '');
+    $category = trim($_POST['category'] ?? '');
     $size_ml = $_POST['size_ml'] !== '' ? (float)$_POST['size_ml'] : null;
-    $cost_price = (float)$_POST['cost_price'];
-    $retail_price = (float)$_POST['retail_price'];
+    $cost_price = (float)($_POST['cost_price'] ?? 0);
+    $retail_price = (float)($_POST['retail_price'] ?? 0);
     $supplier_id = $_POST['supplier_id'] !== '' ? (int)$_POST['supplier_id'] : null;
-    $status = $_POST['status'];
-    $description = trim($_POST['description']);
+    $status = $_POST['status'] ?? 'active';
+    $description = trim($_POST['description'] ?? '');
 
     if (!$name) $errors[] = "Product name is required.";
-    if ($cost_price <= 0) $errors[] = "Cost price must be positive.";
-    if ($retail_price <= 0) $errors[] = "Retail price must be positive.";
+    if ($cost_price <= 0) $errors[] = "Cost price must be greater than zero.";
+    if ($retail_price <= 0) $errors[] = "Retail price must be greater than zero.";
 
     if (!$errors) {
         try {
@@ -35,61 +35,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch suppliers for dropdown
 $suppliers = $pdo->query("SELECT supplier_id, name FROM suppliers ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
-
-include '../../includes/header.php';
 ?>
 
-<h2>Add New Product</h2>
+<?php include '../../includes/header.php'; ?>
 
-<?php if ($errors): ?>
-    <ul style="color:red;">
-        <?php foreach ($errors as $err) echo "<li>$err</li>"; ?>
-    </ul>
-<?php endif; ?>
+<main class="main-content">
 
-<?php if ($success): ?>
-    <p style="color:green;"><?= htmlspecialchars($success) ?></p>
-<?php endif; ?>
+    <!-- Header -->
+    <div class="card mb-sm" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Add New Product</h2>
+    </div>
 
-<form method="post">
-    <label>Name:</label>
-    <input type="text" name="name" required><br>
+    <!-- Form Card -->
+    <div class="card form-card">
+        <?php if ($errors): ?>
+            <div class="alert alert-danger mb-md">
+                <ul>
+                    <?php foreach ($errors as $err): ?>
+                        <li><?= htmlspecialchars($err) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
 
-    <label>Brand:</label>
-    <input type="text" name="brand"><br>
+        <?php if ($success): ?>
+            <div class="alert alert-success mb-md">
+                <?= htmlspecialchars($success) ?>
+            </div>
+        <?php endif; ?>
 
-    <label>Category:</label>
-    <input type="text" name="category"><br>
+        <form method="POST" class="form-grid">
 
-    <label>Size (ml):</label>
-    <input type="number" step="0.01" name="size_ml"><br>
+            <div class="form-group">
+                <label for="name">Product Name<span class="required">*</span></label>
+                <input type="text" id="name" name="name" required>
+            </div>
 
-    <label>Cost Price:</label>
-    <input type="number" step="0.01" name="cost_price" required><br>
+            <div class="form-group">
+                <label for="brand">Brand</label>
+                <input type="text" id="brand" name="brand">
+            </div>
 
-    <label>Retail Price:</label>
-    <input type="number" step="0.01" name="retail_price" required><br>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input type="text" id="category" name="category">
+            </div>
 
-    <label>Supplier:</label>
-    <select name="supplier_id">
-        <option value="">-- Select Supplier --</option>
-        <?php foreach ($suppliers as $s): ?>
-            <option value="<?= $s['supplier_id'] ?>"><?= htmlspecialchars($s['name']) ?></option>
-        <?php endforeach; ?>
-    </select><br>
+            <div class="form-group">
+                <label for="size_ml">Size (ml)</label>
+                <input type="number" id="size_ml" name="size_ml" step="0.01">
+            </div>
 
-    <label>Status:</label>
-    <select name="status">
-        <option value="active">Active</option>
-        <option value="discontinued">Discontinued</option>
-    </select><br>
+            <div class="form-group">
+                <label for="cost_price">Cost Price<span class="required">*</span></label>
+                <input type="number" id="cost_price" name="cost_price" step="0.01" required>
+            </div>
 
-    <label>Description:</label>
-    <textarea name="description" required></textarea><br>
+            <div class="form-group">
+                <label for="retail_price">Retail Price<span class="required">*</span></label>
+                <input type="number" id="retail_price" name="retail_price" step="0.01" required>
+            </div>
 
-    <button type="submit">Add Product</button>
-</form>
+            <div class="form-group">
+                <label for="supplier_id">Supplier</label>
+                <select id="supplier_id" name="supplier_id">
+                    <option value="">-- Select Supplier --</option>
+                    <?php foreach ($suppliers as $s): ?>
+                        <option value="<?= $s['supplier_id'] ?>"><?= htmlspecialchars($s['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-<a href="index.php">Cancel</a>
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="active">Active</option>
+                    <option value="discontinued">Discontinued</option>
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="description">Description<span class="required">*</span></label>
+                <textarea id="description" name="description" rows="4" required></textarea>
+            </div>
+
+            <div class="form-actions mt-md">
+                <button type="submit" class="btn btn-primary">Save Product</button>
+                <a href="index.php" class="btn btn-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

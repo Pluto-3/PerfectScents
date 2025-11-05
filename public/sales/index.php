@@ -5,39 +5,62 @@ require_once '../../includes/functions.php';
 
 require_login();
 
-$sales = get_all_sales($pdo); // Strict function to fetch all sales
+$sales = get_all_sales($pdo);
 ?>
 
 <?php include '../../includes/header.php'; ?>
 
-<h2>Sales</h2>
-<a href="add.php">Add New Sale</a>
+<main class="main-content">
 
-<table border="1" cellpadding="5" cellspacing="0">
-    <tr>
-        <th>ID</th>
-        <th>Date</th>
-        <th>Customer</th>
-        <th>Total Amount</th>
-        <th>Payment Method</th>
-        <th>Sales Channel</th>
-        <th>Actions</th>
-    </tr>
-    <?php foreach($sales as $s): ?>
-    <tr>
-        <td><?= $s['sale_id'] ?></td>
-        <td><?= $s['sale_date'] ?></td>
-        <td><?= htmlspecialchars($s['customer_name'] ?? 'Walk-in') ?></td>
-        <td><?= number_format($s['total_amount'], 2) ?></td>
-        <td><?= $s['payment_method'] ?></td>
-        <td><?= $s['sales_channel'] ?></td>
-        <td>
-            <a href="view.php?id=<?= $s['sale_id'] ?>">View</a> |
-            <a href="edit.php?id=<?= $s['sale_id'] ?>">Edit</a> |
-            <a href="delete.php?id=<?= $s['sale_id'] ?>" onclick="return confirm('Delete this sale?')">Delete</a>
-        </td>
-    </tr>
-    <?php endforeach; ?>
-</table>
+    <!-- Page Header -->
+    <div class="card mb-sm" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Sales</h2>
+    </div>
+
+    <div class="card mb-md flex end">
+        <a href="add.php" class="btn btn-primary">Add New Sale</a>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Total Amount</th>
+                    <th>Payment Method</th>
+                    <th>Sales Channel</th>
+                    <th class="center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($sales): ?>
+                    <?php foreach($sales as $s): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($s['sale_id']) ?></td>
+                            <td><?= htmlspecialchars($s['sale_date']) ?></td>
+                            <td><?= htmlspecialchars($s['customer_name'] ?? 'Walk-in') ?></td>
+                            <td><?= number_format($s['total_amount'] - $s['discount'], 2) ?></td>
+                            <td><?= htmlspecialchars($s['payment_method']) ?></td>
+                            <td><?= htmlspecialchars($s['sales_channel']) ?></td>
+                            <td class="flex center gap-md">
+                                <a href="view.php?id=<?= $s['sale_id'] ?>" class="btn btn-secondary">View</a>
+                                <a href="edit.php?id=<?= $s['sale_id'] ?>" class="btn btn-primary">Edit</a>
+                                <a href="delete.php?id=<?= $s['sale_id'] ?>" class="btn btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7" class="center text-muted">No sales found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

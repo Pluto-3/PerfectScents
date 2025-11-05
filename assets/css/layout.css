@@ -1,0 +1,203 @@
+/* ==============================
+   Perfume Retail System
+   Layout / Structural Styles
+   ============================== */
+
+/* ---------- Root Containers ---------- */
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.main-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 60px); /* leave space for footer */
+}
+
+.main-nav {
+    background-color: #1f2937; /* dark gray/nav bg */
+    padding: 10px 20px;
+    margin-bottom: 20px;
+}
+
+.main-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex; /* horizontal layout */
+    flex-wrap: wrap; /* wrap to next line if too long */
+    gap: 15px; /* spacing between links */
+}
+
+.main-nav a {
+    text-decoration: none;
+    color: #f9fafb; /* light text */
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.main-nav a:hover {
+    background-color: #4b5563; /* slightly lighter on hover */
+    color: #fff;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 240px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar a {
+  color: var(--color-text);
+  font-weight: 500;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  height: 60px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar .user-info {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.topbar .user-info a {
+  color: var(--color-primary);
+  margin-left: var(--space-sm);
+}
+
+/* ---------- Content Area ---------- */
+.content {
+  flex: 1;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  background-color: var(--color-bg);
+}
+
+/* ---------- Grid / Cards Container ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ---------- Breadcrumb / Page Title ---------- */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.page-header h2 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.breadcrumb {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---------- Tables ---------- */
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+th {
+  font-weight: 600;
+  background-color: var(--color-surface);
+}
+
+/* ---------- Footer ---------- */
+footer {
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* ---------- Utility Classes ---------- */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-center { justify-content: center; align-items: center; }
+.flex-between { justify-content: space-between; align-items: center; }
+.mt-md { margin-top: var(--space-md); }
+.mb-md { margin-bottom: var(--space-md); }
+.p-md { padding: var(--space-md); }
+.gap-md { gap: var(--space-md); }
+.hidden { display: none; }
+
+/* ---------- Responsive ---------- */
+@media screen and (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    width: 200px;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+  
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  .main-wrapper {
+    margin-left: 0;
+  }
+
+  .topbar {
+    padding: 0 var(--space-md);
+  }
+}

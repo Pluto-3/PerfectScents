@@ -7,40 +7,65 @@ require_login();
 
 $customers = get_all_customers($pdo);
 
+include '../../includes/header.php';
 ?>
 
-<?php include '../../includes/header.php'; ?>
+<main class="main-content">
 
-<h2>Customers</h2>
-<a href="add.php">Add New Customer</a>
+    <!-- Page Header -->
+    <div class="card mb-sm" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Customers</h2>
+    </div>
 
-<table border="1" cellpadding="5" cellspacing="0">
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Email</th>
-        <th>Region</th>
-        <th>Source</th>
-        <th>Created At</th>
-        <th>Actions</th>
-    </tr>
-    <?php foreach($customers as $c): ?>
-    <tr>
-        <td><?= (int)$c['customer_id'] ?></td>
-        <td><?= htmlspecialchars($c['name']) ?></td>
-        <td><?= htmlspecialchars($c['phone']) ?></td>
-        <td><?= htmlspecialchars($c['email']) ?></td>
-        <td><?= htmlspecialchars($c['region']) ?></td>
-        <td><?= htmlspecialchars($c['source']) ?></td>
-        <td><?= htmlspecialchars($c['created_at']) ?></td>
-        <td>
-            <a href="view.php?id=<?= (int)$c['customer_id'] ?>">View</a> |
-            <a href="edit.php?id=<?= (int)$c['customer_id'] ?>">Edit</a> |
-            <a href="delete.php?id=<?= (int)$c['customer_id'] ?>" onclick="return confirm('Delete this customer?');">Delete</a>
-        </td>
-    </tr>
-    <?php endforeach; ?>
-</table>
+    <div class="card mb-md flex end">
+        <a href="add.php" class="btn btn-primary">Add New Customer</a>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Region</th>
+                    <th>Source</th>
+                    <th>Created At</th>
+                    <th class="center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($customers): ?>
+                    <?php foreach ($customers as $c): ?>
+                        <tr>
+                            <td><?= (int)$c['customer_id'] ?></td>
+                            <td><?= htmlspecialchars($c['name']) ?></td>
+                            <td><?= htmlspecialchars($c['phone']) ?></td>
+                            <td><?= htmlspecialchars($c['email']) ?></td>
+                            <td><?= htmlspecialchars($c['region']) ?></td>
+                            <td><?= htmlspecialchars($c['source']) ?></td>
+                            <td><?= htmlspecialchars($c['created_at']) ?></td>
+                            <td class="flex center gap-md">
+                                <a href="view.php?id=<?= (int)$c['customer_id'] ?>" class="btn btn-secondary">View</a>
+                                <a href="edit.php?id=<?= (int)$c['customer_id'] ?>" class="btn btn-primary">Edit</a>
+                                <a href="delete.php?id=<?= (int)$c['customer_id'] ?>" class="btn btn-danger"
+                                   onclick="return confirm('Are you sure you want to delete this customer?');">
+                                   Delete
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="8" class="center text-muted">No customers found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

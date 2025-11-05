@@ -134,6 +134,8 @@ function delete_supplier(PDO $pdo, int $supplier_id) {
     $stmt->execute([$supplier_id]);
 }
 
+// Purchases
+
 // Get all purchases with optional filter
 function get_all_purchases($pdo, $filters = []) {
     $sql = "SELECT p.*, s.name AS supplier_name
@@ -716,47 +718,61 @@ function delete_return(PDO $pdo, int $return_id): void {
    ============================================ */
 
 // Add a new expense
-function addExpense($conn, $category, $description, $amount, $expense_date, $payment_method) {
-    $stmt = $conn->prepare("INSERT INTO expenses (category, description, amount, expense_date, payment_method, created_at)
-                            VALUES (?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssdss", $category, $description, $amount, $expense_date, $payment_method);
-    return $stmt->execute();
+function add_expense(PDO $pdo, $category, $description, $amount, $expense_date, $payment_method) {
+    $stmt = $pdo->prepare("
+        INSERT INTO expenses (category, description, amount, expense_date, payment_method, created_at)
+        VALUES (:category, :description, :amount, :expense_date, :payment_method, NOW())
+    ");
+    return $stmt->execute([
+        ':category' => $category,
+        ':description' => $description,
+        ':amount' => $amount,
+        ':expense_date' => $expense_date,
+        ':payment_method' => $payment_method
+    ]);
 }
 
 // Fetch all expenses
-function getAllExpenses($conn) {
-    $sql = "SELECT * FROM expenses ORDER BY expense_date DESC";
-    $result = $conn->query($sql);
-    $expenses = [];
-    while ($row = $result->fetch_assoc()) {
-        $expenses[] = $row;
-    }
-    return $expenses;
+function get_all_expenses(PDO $pdo) {
+    $stmt = $pdo->query("
+        SELECT expense_id, category, description, amount, expense_date, payment_method, created_at
+        FROM expenses
+        ORDER BY expense_date DESC
+    ");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Fetch single expense by ID
-function getExpenseById($conn, $expense_id) {
-    $stmt = $conn->prepare("SELECT * FROM expenses WHERE expense_id = ?");
-    $stmt->bind_param("i", $expense_id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+function get_expense_by_id(PDO $pdo, $expense_id) {
+    $stmt = $pdo->prepare("SELECT * FROM expenses WHERE expense_id = ?");
+    $stmt->execute([$expense_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Update an expense
-function updateExpense($conn, $expense_id, $category, $description, $amount, $expense_date, $payment_method) {
-    $stmt = $conn->prepare("UPDATE expenses 
-                            SET category=?, description=?, amount=?, expense_date=?, payment_method=? 
-                            WHERE expense_id=?");
-    $stmt->bind_param("ssdssi", $category, $description, $amount, $expense_date, $payment_method, $expense_id);
-    return $stmt->execute();
+function update_expense(PDO $pdo, $expense_id, $category, $description, $amount, $expense_date, $payment_method) {
+    $stmt = $pdo->prepare("
+        UPDATE expenses
+        SET category = :category, description = :description, amount = :amount, 
+            expense_date = :expense_date, payment_method = :payment_method
+        WHERE expense_id = :expense_id
+    ");
+    return $stmt->execute([
+        ':category' => $category,
+        ':description' => $description,
+        ':amount' => $amount,
+        ':expense_date' => $expense_date,
+        ':payment_method' => $payment_method,
+        ':expense_id' => $expense_id
+    ]);
 }
 
 // Delete an expense
-function deleteExpense($conn, $expense_id) {
-    $stmt = $conn->prepare("DELETE FROM expenses WHERE expense_id = ?");
-    $stmt->bind_param("i", $expense_id);
-    return $stmt->execute();
+function delete_expense(PDO $pdo, $expense_id) {
+    $stmt = $pdo->prepare("DELETE FROM expenses WHERE expense_id = ?");
+    return $stmt->execute([$expense_id]);
 }
+
 
 // MARKETING MODULE FUNCTIONS
 function get_all_campaigns($pdo) {

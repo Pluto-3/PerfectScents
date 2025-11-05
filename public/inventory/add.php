@@ -7,53 +7,89 @@ require_login();
 
 $products = get_all_products($pdo);
 
+$errors = [];
+$success = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $product_id = $_POST['product_id'];
-    $stock_in = $_POST['stock_in'] ?? 0;
-    $stock_out = $_POST['stock_out'] ?? 0;
+    $product_id = $_POST['product_id'] ?? null;
+    $stock_in = (int)($_POST['stock_in'] ?? 0);
+    $stock_out = (int)($_POST['stock_out'] ?? 0);
 
-    $current_stock = get_current_stock($pdo, $product_id);
-    if (!$current_stock) $current_stock = 0;
+    if (!$product_id) $errors[] = "Product is required.";
 
+    $current_stock = get_current_stock($pdo, $product_id) ?? 0;
     $new_stock = $current_stock + $stock_in - $stock_out;
-    if ($new_stock < 0) die("Error: Cannot reduce below zero stock.");
 
-    $data = [
-        'product_id' => $product_id,
-        'stock_in' => $stock_in,
-        'stock_out' => $stock_out,
-        'current_stock' => $new_stock
-    ];
+    if ($new_stock < 0) $errors[] = "Error: Stock cannot go below zero.";
 
-    if (add_inventory_entry($pdo, $data)) {
-        header("Location: index.php");
-        exit;
-    } else {
-        echo "Failed to record inventory.";
+    if (empty($errors)) {
+        $data = [
+            'product_id' => $product_id,
+            'stock_in' => $stock_in,
+            'stock_out' => $stock_out,
+            'current_stock' => $new_stock
+        ];
+
+        if (add_inventory_entry($pdo, $data)) {
+            $success = "Inventory adjustment added successfully.";
+        } else {
+            $errors[] = "Failed to record inventory adjustment.";
+        }
     }
 }
 
 include '../../includes/header.php';
 ?>
 
-<h2>Add Inventory Adjustment</h2>
+<main class="main-content">
 
-<form method="POST">
-    <label>Product:</label><br>
-    <select name="product_id" required>
-        <option value="">--Select Product--</option>
-        <?php foreach ($products as $p): ?>
-            <option value="<?= $p['product_id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-        <?php endforeach; ?>
-    </select><br>
+    <div class="card mb-sm" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Add Inventory Adjustment</h2>
+    </div>
 
-    <label>Stock In:</label><br>
-    <input type="number" name="stock_in" min="0" value="0"><br>
+    <?php if ($errors): ?>
+        <div class="alert alert-error mb-sm">
+            <ul>
+                <?php foreach ($errors as $err): ?>
+                    <li><?= htmlspecialchars($err) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
 
-    <label>Stock Out:</label><br>
-    <input type="number" name="stock_out" min="0" value="0"><br>
+    <?php if ($success): ?>
+        <div class="alert alert-success mb-sm"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
 
-    <button type="submit">Save</button>
-</form>
+    <div class="card">
+        <form method="POST" class="form-grid">
+            <div class="form-group">
+                <label for="product_id">Product</label>
+                <select name="product_id" id="product_id" required>
+                    <option value="">--Select Product--</option>
+                    <?php foreach ($products as $p): ?>
+                        <option value="<?= $p['product_id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="stock_in">Stock In</label>
+                <input type="number" name="stock_in" id="stock_in" min="0" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="stock_out">Stock Out</label>
+                <input type="number" name="stock_out" id="stock_out" min="0" value="0">
+            </div>
+
+            <div class="form-actions mt-sm">
+                <button type="submit" class="btn btn-primary">Save Adjustment</button>
+                <a href="index.php" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</main>
 
 <?php include '../../includes/footer.php'; ?>

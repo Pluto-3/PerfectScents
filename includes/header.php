@@ -10,7 +10,10 @@ require_login();
 <head>
 <meta charset="UTF-8">
 <title><?= SITE_NAME ?></title>
-<link rel="stylesheet" href="../assets/css/main.css">
+<link rel="stylesheet" href="<?= ASSETS_URL ?>css/layout.css">
+<link rel="stylesheet" href="<?= ASSETS_URL ?>css/theme.css">
+<link rel="stylesheet" href="<?= ASSETS_URL ?>css/components.css">
+<link rel="stylesheet" href="<?= ASSETS_URL ?>css/utilities.css">
 </head>
 <body>
 <header>
