@@ -2,56 +2,46 @@
 require_once '../../config/constants.php';
 require_once '../../includes/session.php';
 require_once '../../includes/functions.php';
-
 require_login();
 
-$returns = get_all_returns($pdo);
+if (!isset($_GET['id'])) {
+    die("Return ID is missing.");
+}
+
+$return_id = (int)$_GET['id'];
+$r = get_return_by_id($pdo, $return_id);
+if (!$r) {
+    die("Return not found.");
+}
+
+// Get product and sale details
+$product = $pdo->prepare("SELECT name FROM products WHERE product_id = ?");
+$product->execute([$r['product_id']]);
+$product_name = $product->fetchColumn();
+
+$sale = $pdo->prepare("SELECT sale_date, total_amount FROM sales WHERE sale_id = ?");
+$sale->execute([$r['sale_id']]);
+$sale_info = $sale->fetch(PDO::FETCH_ASSOC);
+
+include '../../includes/header.php';
 ?>
 
-<?php include '../../includes/header.php'; ?>
+<h2>Return Details</h2>
 
-<h2>Product Returns</h2>
-<a href="add.php">Add New Return</a>
-
-<table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-        <tr>
-            <th>Return ID</th>
-            <th>Sale ID</th>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Subtotal</th>
-            <th>Reason</th>
-            <th>Return Date</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach($returns as $r): 
-            // Get unit price from sale_items
-            $stmt = $pdo->prepare("SELECT unit_price FROM sale_items WHERE sale_id = :sale_id AND product_id = :product_id");
-            $stmt->execute(['sale_id' => $r['sale_id'], 'product_id' => $r['product_id']]);
-            $item = $stmt->fetch(PDO::FETCH_ASSOC);
-            $unit_price = $item ? $item['unit_price'] : 0;
-            $subtotal = $unit_price * $r['quantity'];
-        ?>
-        <tr>
-            <td><?= $r['return_id'] ?></td>
-            <td><?= $r['sale_id'] ?></td>
-            <td><?= htmlspecialchars($r['product_name']) ?></td>
-            <td><?= $r['quantity'] ?></td>
-            <td><?= number_format($unit_price, 2) ?></td>
-            <td><?= number_format($subtotal, 2) ?></td>
-            <td><?= htmlspecialchars($r['reason']) ?></td>
-            <td><?= $r['return_date'] ?></td>
-            <td>
-                <a href="edit.php?id=<?= $r['return_id'] ?>">Edit</a> |
-                <a href="delete.php?id=<?= $r['return_id'] ?>" onclick="return confirm('Are you sure?');">Delete</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
+<table>
+    <tr><th>Return ID</th><td><?= htmlspecialchars($r['return_id']) ?></td></tr>
+    <tr><th>Sale ID</th><td><?= htmlspecialchars($r['sale_id']) ?></td></tr>
+    <tr><th>Product</th><td><?= htmlspecialchars($product_name) ?></td></tr>
+    <tr><th>Quantity</th><td><?= htmlspecialchars($r['quantity']) ?></td></tr>
+    <tr><th>Reason</th><td><?= htmlspecialchars($r['reason']) ?></td></tr>
+    <tr><th>Return Date</th><td><?= htmlspecialchars($r['return_date']) ?></td></tr>
+    <tr><th>Sale Date</th><td><?= htmlspecialchars($sale_info['sale_date']) ?></td></tr>
+    <tr><th>Sale Total</th><td><?= htmlspecialchars($sale_info['total_amount']) ?></td></tr>
 </table>
+
+<a href="edit_return.php?id=<?= $r['return_id'] ?>">Edit</a> |
+<a href="delete_return.php?id=<?= $r['return_id'] ?>" 
+   onclick="return confirm('Are you sure you want to delete this return?');">Delete</a> |
+<a href="index.php">Back to List</a>
 
 <?php include '../../includes/footer.php'; ?>

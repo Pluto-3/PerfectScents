@@ -13,7 +13,6 @@ $returns = get_all_returns($pdo);
 
 <h2>Returns / Refunds</h2>
 <a href="add.php">Add Return</a>
-<a href="view.php">View Return</a>
 
 <table border="1" cellpadding="5" cellspacing="0">
     <tr>

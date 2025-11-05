@@ -1,30 +1,36 @@
 <?php
+require_once '../../config/constants.php';
 require_once '../../includes/session.php';
-require_login();
-require_role('admin');
 require_once '../../includes/functions.php';
 
-$id = $_GET['id'] ?? null;
-if (!$id) die("Supplier ID missing.");
+require_login();
 
-$supplier = get_supplier($pdo, $id);
+if (!isset($_GET['id'])) die("Supplier ID not specified.");
+
+$supplier_id = (int)$_GET['id'];
+$supplier = get_supplier_by_id($pdo, $supplier_id);
 if (!$supplier) die("Supplier not found.");
 
-$message = '';
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $contact_person = trim($_POST['contact_person']);
-    $phone = trim($_POST['phone']);
-    $email = trim($_POST['email']);
-    $address = trim($_POST['address']);
-    $notes = trim($_POST['notes']);
+    $name = $_POST['name'] ?: '';
+    $contact_person = $_POST['contact_person'] ?: null;
+    $phone = $_POST['phone'] ?: null;
+    $email = $_POST['email'] ?: null;
+    $address = $_POST['address'] ?: null;
+    $reliability_score = isset($_POST['reliability_score']) ? (float)$_POST['reliability_score'] : 0.0;
 
-    if(update_supplier($pdo, $id, $name, $contact_person, $phone, $email, $address, $notes)) {
-        header('Location: index.php');
-        exit();
+    if (empty($name)) {
+        $error = "Supplier name is required.";
     } else {
-        $message = "Error updating supplier.";
+        try {
+            update_supplier($pdo, $supplier_id, $name, $contact_person, $phone, $email, $address, $reliability_score);
+            header("Location: index.php");
+            exit;
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+        }
     }
 }
 ?>
@@ -32,17 +38,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include '../../includes/header.php'; ?>
 
 <h2>Edit Supplier</h2>
-<?php if($message): ?>
-    <p style="color:red;"><?= $message ?></p>
+
+<?php if ($error): ?>
+<p style="color:red"><?= htmlspecialchars($error) ?></p>
 <?php endif; ?>
 
-<form method="post">
-    <label>Name:</label><input type="text" name="name" value="<?= htmlspecialchars($supplier['name']) ?>" required><br>
-    <label>Contact Person:</label><input type="text" name="contact_person" value="<?= htmlspecialchars($supplier['contact_person']) ?>"><br>
-    <label>Phone:</label><input type="text" name="phone" value="<?= htmlspecialchars($supplier['phone']) ?>" required><br>
-    <label>Email:</label><input type="email" name="email" value="<?= htmlspecialchars($supplier['email']) ?>"><br>
-    <label>Address:</label><input type="text" name="address" value="<?= htmlspecialchars($supplier['address']) ?>"><br>
-    <label>Notes:</label><textarea name="notes"><?= htmlspecialchars($supplier['notes']) ?></textarea><br>
+<form method="POST">
+    <label>Name: <input type="text" name="name" required value="<?= htmlspecialchars($supplier['name']) ?>"></label><br>
+    <label>Contact Person: <input type="text" name="contact_person" value="<?= htmlspecialchars($supplier['contact_person']) ?>"></label><br>
+    <label>Phone: <input type="text" name="phone" value="<?= htmlspecialchars($supplier['phone']) ?>"></label><br>
+    <label>Email: <input type="email" name="email" value="<?= htmlspecialchars($supplier['email']) ?>"></label><br>
+    <label>Address: <textarea name="address"><?= htmlspecialchars($supplier['address']) ?></textarea></label><br>
+    <label>Reliability Score: <input type="number" name="reliability_score" step="0.01" min="0" max="10" value="<?= number_format($supplier['reliability_score'], 2) ?>"></label><br>
     <button type="submit">Update Supplier</button>
 </form>
 

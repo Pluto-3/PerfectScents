@@ -2,7 +2,6 @@
 require_once '../../config/constants.php';
 require_once '../../includes/session.php';
 require_once '../../includes/functions.php';
-
 require_login();
 
 $errors = [];
@@ -22,24 +21,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all sales and products for selection
 $sales = $pdo->query("SELECT sale_id FROM sales ORDER BY sale_date DESC")->fetchAll(PDO::FETCH_ASSOC);
-$products = $pdo->query("SELECT product_id, name FROM products WHERE status='active'")->fetchAll(PDO::FETCH_ASSOC);
+$products = $pdo->query("SELECT product_id, name FROM products WHERE status = 'active'")->fetchAll(PDO::FETCH_ASSOC);
 
+include '../../includes/header.php';
 ?>
-
-<?php include '../../includes/header.php'; ?>
 
 <h2>Add Product Return</h2>
 
-<?php if($errors): ?>
-    <ul style="color:red;">
-        <?php foreach($errors as $err) echo "<li>$err</li>"; ?>
-    </ul>
+<?php if ($errors): ?>
+<ul style="color:red;"><?php foreach ($errors as $err) echo "<li>$err</li>"; ?></ul>
 <?php endif; ?>
 
-<?php if($success): ?>
-    <p style="color:green;"><?= $success ?></p>
+<?php if ($success): ?>
+<p style="color:green;"><?= $success ?></p>
 <?php endif; ?>
 
 <form method="post">

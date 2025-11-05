@@ -1,7 +1,7 @@
 <?php
 require_once '../../config/constants.php';
-require_once '../../includes/session.php';     
-require_once '../../includes/functions.php';   
+require_once '../../includes/session.php';
+require_once '../../includes/functions.php';
 
 require_login();
 
@@ -17,9 +17,11 @@ $suppliers = get_all_suppliers($pdo);
     <tr>
         <th>ID</th>
         <th>Name</th>
-        <th>Contact</th>
+        <th>Contact Person</th>
         <th>Phone</th>
         <th>Email</th>
+        <th>Address</th>
+        <th>Reliability Score</th>
         <th>Actions</th>
     </tr>
     <?php foreach($suppliers as $s): ?>
@@ -29,9 +31,11 @@ $suppliers = get_all_suppliers($pdo);
         <td><?= htmlspecialchars($s['contact_person']) ?></td>
         <td><?= htmlspecialchars($s['phone']) ?></td>
         <td><?= htmlspecialchars($s['email']) ?></td>
+        <td><?= htmlspecialchars($s['address']) ?></td>
+        <td><?= number_format($s['reliability_score'], 2) ?></td>
         <td>
-            <a href="view.php?id=<?= $s['supplier_id'] ?>">View</a> |
-            <a href="edit.php?id=<?= $s['supplier_id'] ?>">Edit</a>
+            <a href="edit.php?id=<?= $s['supplier_id'] ?>">Edit</a> |
+            <a href="delete.php?id=<?= $s['supplier_id'] ?>" onclick="return confirm('Delete this supplier?')">Delete</a>
         </td>
     </tr>
     <?php endforeach; ?>

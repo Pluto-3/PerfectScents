@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 04, 2025 at 07:07 AM
+-- Generation Time: Nov 04, 2025 at 10:43 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -76,6 +76,13 @@ CREATE TABLE `inventory` (
   `last_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `inventory`
+--
+
+INSERT INTO `inventory` (`inventory_id`, `product_id`, `stock_in`, `stock_out`, `last_updated`) VALUES
+(1, 6, 63, 3, '2025-11-04 10:27:32');
+
 -- --------------------------------------------------------
 
 --
@@ -99,7 +106,8 @@ CREATE TABLE `logs` (
 INSERT INTO `logs` (`log_id`, `user_id`, `action`, `module`, `record_id`, `details`, `created_at`) VALUES
 (1, 1, 'update', 'settings', NULL, 'Updated low_stock_threshold to 5', '2025-11-04 08:58:07'),
 (2, 1, 'update', 'settings', NULL, 'Updated store_name to Perfect Scents', '2025-11-04 08:58:07'),
-(3, 1, 'update', 'settings', NULL, 'Updated tax_rate to 18', '2025-11-04 08:58:07');
+(3, 1, 'update', 'settings', NULL, 'Updated tax_rate to 18', '2025-11-04 08:58:07'),
+(4, 1, 'delete', 'purchases', 5, 'Deleted purchase and associated items', '2025-11-04 10:14:35');
 
 -- --------------------------------------------------------
 
@@ -137,6 +145,13 @@ CREATE TABLE `products` (
   `description` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`product_id`, `name`, `brand`, `category`, `size_ml`, `cost_price`, `retail_price`, `supplier_id`, `status`, `created_at`, `description`) VALUES
+(6, 'forpluto', 'ski', 'whonkowszz', 100.00, 35000.00, 150000.00, 1, 'active', '2025-11-04 09:24:03', 'yessir');
+
 -- --------------------------------------------------------
 
 --
@@ -153,6 +168,13 @@ CREATE TABLE `purchases` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `purchases`
+--
+
+INSERT INTO `purchases` (`purchase_id`, `supplier_id`, `invoice_number`, `total_cost`, `purchase_date`, `payment_method`, `created_at`) VALUES
+(4, 1, '41', 1080000.00, '2025-11-04', 'cash', '2025-11-04 10:14:10');
+
 -- --------------------------------------------------------
 
 --
@@ -166,6 +188,13 @@ CREATE TABLE `purchase_items` (
   `quantity` int(11) NOT NULL,
   `cost_per_unit` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `purchase_items`
+--
+
+INSERT INTO `purchase_items` (`id`, `purchase_id`, `product_id`, `quantity`, `cost_per_unit`) VALUES
+(8, 4, 6, 24, 45000.00);
 
 -- --------------------------------------------------------
 
@@ -198,6 +227,13 @@ CREATE TABLE `sales` (
   `discount` decimal(10,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `sales`
+--
+
+INSERT INTO `sales` (`sale_id`, `customer_id`, `sale_date`, `total_amount`, `payment_method`, `sales_channel`, `discount`) VALUES
+(6, 2, '2025-11-04 10:20:55', 491000.00, 'cash', 'store', 34000.00);
+
 -- --------------------------------------------------------
 
 --
@@ -211,6 +247,13 @@ CREATE TABLE `sale_items` (
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sale_items`
+--
+
+INSERT INTO `sale_items` (`id`, `sale_id`, `product_id`, `quantity`, `unit_price`) VALUES
+(5, 6, 6, 3, 175000.00);
 
 -- --------------------------------------------------------
 
@@ -251,6 +294,13 @@ CREATE TABLE `suppliers` (
   `reliability_score` decimal(4,2) DEFAULT 0.00,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `suppliers`
+--
+
+INSERT INTO `suppliers` (`supplier_id`, `name`, `contact_person`, `phone`, `email`, `address`, `reliability_score`, `created_at`) VALUES
+(1, 'pluto', 'madaraski', '45', 'ski@mail.com', 'kigoma', 9.60, '2025-11-04 09:17:27');
 
 -- --------------------------------------------------------
 
@@ -395,13 +445,13 @@ ALTER TABLE `expenses`
 -- AUTO_INCREMENT for table `inventory`
 --
 ALTER TABLE `inventory`
-  MODIFY `inventory_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `inventory_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `marketing`
@@ -413,37 +463,37 @@ ALTER TABLE `marketing`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `purchase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `purchase_items`
 --
 ALTER TABLE `purchase_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `returns`
 --
 ALTER TABLE `returns`
-  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `return_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `sale_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `sale_items`
 --
 ALTER TABLE `sale_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -455,7 +505,7 @@ ALTER TABLE `settings`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`

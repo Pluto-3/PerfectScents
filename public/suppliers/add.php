@@ -4,27 +4,27 @@ require_once '../../includes/session.php';
 require_once '../../includes/functions.php';
 
 require_login();
-require_role('admin');
 
-$message = '';
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $contact_person = trim($_POST['contact_person']);
-    $phone = trim($_POST['phone']);
-    $email = trim($_POST['email']);
-    $address = trim($_POST['address']);
-    $notes = trim($_POST['notes']);
+    $name = $_POST['name'] ?: '';
+    $contact_person = $_POST['contact_person'] ?: null;
+    $phone = $_POST['phone'] ?: null;
+    $email = $_POST['email'] ?: null;
+    $address = $_POST['address'] ?: null;
+    $reliability_score = isset($_POST['reliability_score']) ? (float)$_POST['reliability_score'] : 0.0;
 
-    if ($name && $phone) {
-        if(add_supplier($pdo, $name, $contact_person, $phone, $email, $address, $notes)) {
-            header('Location: index.php');
-            exit();
-        } else {
-            $message = "Error adding supplier.";
-        }
+    if (empty($name)) {
+        $error = "Supplier name is required.";
     } else {
-        $message = "Name and phone are required.";
+        try {
+            add_supplier($pdo, $name, $contact_person, $phone, $email, $address, $reliability_score);
+            header("Location: index.php");
+            exit;
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+        }
     }
 }
 ?>
@@ -32,18 +32,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include '../../includes/header.php'; ?>
 
 <h2>Add Supplier</h2>
-<?php if($message): ?>
-    <p style="color:red;"><?= $message ?></p>
+
+<?php if ($error): ?>
+<p style="color:red"><?= htmlspecialchars($error) ?></p>
 <?php endif; ?>
 
-<form method="post">
-    <label>Name:</label><input type="text" name="name" required><br>
-    <label>Contact Person:</label><input type="text" name="contact_person"><br>
-    <label>Phone:</label><input type="text" name="phone" required><br>
-    <label>Email:</label><input type="email" name="email"><br>
-    <label>Address:</label><input type="text" name="address"><br>
-    <label>Notes:</label><textarea name="notes"></textarea><br>
-    <button type="submit">Add Supplier</button>
+<form method="POST">
+    <label>Name: <input type="text" name="name" required></label><br>
+    <label>Contact Person: <input type="text" name="contact_person"></label><br>
+    <label>Phone: <input type="text" name="phone"></label><br>
+    <label>Email: <input type="email" name="email"></label><br>
+    <label>Address: <textarea name="address"></textarea></label><br>
+    <label>Reliability Score: <input type="number" name="reliability_score" step="0.01" min="0" max="10" value="0"></label><br>
+    <button type="submit">Save Supplier</button>
 </form>
 
 <?php include '../../includes/footer.php'; ?>

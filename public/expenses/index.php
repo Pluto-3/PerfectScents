@@ -32,6 +32,7 @@ $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?= htmlspecialchars($expense['payment_method']) ?></td>
             <td>
                 <a href="edit.php?id=<?= $expense['expense_id'] ?>">Edit</a> |
+                <a href="view.php?id=<?= $expense['expense_id'] ?>">View (under construction)</a> |
                 <a href="delete.php?id=<?= $expense['expense_id'] ?>" 
                    onclick="return confirm('Delete this expense?')">Delete</a>
             </td>

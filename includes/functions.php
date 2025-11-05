@@ -2,33 +2,96 @@
 
 require_once __DIR__ . '/../config/db.php';
 
-// ======= PRODUCTS SECTION =======
-function get_all_products($pdo) {
-    $stmt = $pdo->query("SELECT * FROM products ORDER BY name ASC");
-    return $stmt->fetchAll();
-}
+// ===========================
+// PRODUCTS MODULE FUNCTIONS
+// ===========================
 
-function get_product($pdo, $id) {
-    $stmt = $pdo->prepare("SELECT * FROM products WHERE product_id = ?");
-    $stmt->execute([$id]);
-    return $stmt->fetch();
-}
-
-function add_product($pdo, $name, $supplier_id, $cost_price, $retail_price, $description = null) {
+/**
+ * Fetch all products
+ */
+function get_all_products(PDO $pdo): array {
     $stmt = $pdo->prepare("
-        INSERT INTO products (name, supplier_id, cost_price, retail_price, description)
-        VALUES (?, ?, ?, ?, ?)
+        SELECT p.*, s.name AS supplier_name
+        FROM products p
+        LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
+        ORDER BY p.created_at DESC
     ");
-    return $stmt->execute([$name, $supplier_id, $cost_price, $retail_price, $description]);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function update_product($pdo, $id, $name, $supplier_id, $cost_price, $retail_price, $description = null) {
+/**
+ * Fetch a single product by ID
+ */
+function get_product_by_id(PDO $pdo, int $product_id): ?array {
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE product_id = :product_id");
+    $stmt->execute(['product_id' => $product_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+/**
+ * Add a new product
+ */
+function add_product(PDO $pdo, string $name, ?string $brand, ?string $category, ?float $size_ml,
+                     float $cost_price, float $retail_price, ?int $supplier_id, string $status, string $description): void {
     $stmt = $pdo->prepare("
-        UPDATE products 
-        SET name = ?, supplier_id = ?, cost_price = ?, retail_price = ?, description = ?
-        WHERE product_id = ?
+        INSERT INTO products 
+        (name, brand, category, size_ml, cost_price, retail_price, supplier_id, status, description, created_at)
+        VALUES 
+        (:name, :brand, :category, :size_ml, :cost_price, :retail_price, :supplier_id, :status, :description, NOW())
     ");
-    return $stmt->execute([$name, $supplier_id, $cost_price, $retail_price, $description, $id]);
+    $stmt->execute([
+        'name' => $name,
+        'brand' => $brand,
+        'category' => $category,
+        'size_ml' => $size_ml,
+        'cost_price' => $cost_price,
+        'retail_price' => $retail_price,
+        'supplier_id' => $supplier_id,
+        'status' => $status,
+        'description' => $description
+    ]);
+}
+
+/**
+ * Edit an existing product
+ */
+function edit_product(PDO $pdo, int $product_id, string $name, ?string $brand, ?string $category, ?float $size_ml,
+                      float $cost_price, float $retail_price, ?int $supplier_id, string $status, string $description): void {
+    $stmt = $pdo->prepare("
+        UPDATE products SET
+            name = :name,
+            brand = :brand,
+            category = :category,
+            size_ml = :size_ml,
+            cost_price = :cost_price,
+            retail_price = :retail_price,
+            supplier_id = :supplier_id,
+            status = :status,
+            description = :description
+        WHERE product_id = :product_id
+    ");
+    $stmt->execute([
+        'name' => $name,
+        'brand' => $brand,
+        'category' => $category,
+        'size_ml' => $size_ml,
+        'cost_price' => $cost_price,
+        'retail_price' => $retail_price,
+        'supplier_id' => $supplier_id,
+        'status' => $status,
+        'description' => $description,
+        'product_id' => $product_id
+    ]);
+}
+
+/**
+ * Delete a product
+ */
+function delete_product(PDO $pdo, int $product_id): void {
+    $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = :product_id");
+    $stmt->execute(['product_id' => $product_id]);
 }
 
 // ======= SUPPLIERS =======
@@ -118,39 +181,43 @@ function get_purchase_by_id($pdo, $purchase_id) {
 }
 
 // Create a purchase
-function create_purchase($pdo, $supplier_id, $items, $created_by, $purchase_date = null) {
-    if (!$purchase_date) $purchase_date = date(DATE_FORMAT);
-    
+function create_purchase($pdo, $supplier_id, $items, $payment_method, $invoice_number = null, $purchase_date = null) {
+    if (!$purchase_date) $purchase_date = date('Y-m-d');
+
     $pdo->beginTransaction();
     try {
         // Calculate total cost
         $total_cost = 0;
         foreach ($items as $item) {
-            $total_cost += $item['quantity'] * $item['unit_cost'];
+            $total_cost += $item['quantity'] * $item['cost_per_unit'];
         }
 
         // Insert purchase
-        $stmt = $pdo->prepare("INSERT INTO purchases (supplier_id, purchase_date, total_cost, created_by) 
-                               VALUES (:supplier_id, :purchase_date, :total_cost, :created_by)");
+        $stmt = $pdo->prepare("
+            INSERT INTO purchases (supplier_id, invoice_number, purchase_date, total_cost, payment_method)
+            VALUES (:supplier_id, :invoice_number, :purchase_date, :total_cost, :payment_method)
+        ");
         $stmt->execute([
             ':supplier_id' => $supplier_id,
+            ':invoice_number' => $invoice_number,
             ':purchase_date' => $purchase_date,
             ':total_cost' => $total_cost,
-            ':created_by' => $created_by
+            ':payment_method' => $payment_method
         ]);
         $purchase_id = $pdo->lastInsertId();
 
         // Insert purchase items and update inventory
         foreach ($items as $item) {
             // Insert into purchase_items
-            $stmt = $pdo->prepare("INSERT INTO purchase_items (purchase_id, product_id, quantity, unit_cost, subtotal)
-                                   VALUES (:purchase_id, :product_id, :quantity, :unit_cost, :subtotal)");
-            $stmt->execute([
+            $stmtItem = $pdo->prepare("
+                INSERT INTO purchase_items (purchase_id, product_id, quantity, cost_per_unit)
+                VALUES (:purchase_id, :product_id, :quantity, :cost_per_unit)
+            ");
+            $stmtItem->execute([
                 ':purchase_id' => $purchase_id,
                 ':product_id' => $item['product_id'],
                 ':quantity' => $item['quantity'],
-                ':unit_cost' => $item['unit_cost'],
-                ':subtotal' => $item['quantity'] * $item['unit_cost']
+                ':cost_per_unit' => $item['cost_per_unit']
             ]);
 
             // Update inventory
@@ -159,23 +226,24 @@ function create_purchase($pdo, $supplier_id, $items, $created_by, $purchase_date
             $inventory = $stmtInv->fetch(PDO::FETCH_ASSOC);
 
             if ($inventory) {
-                $new_qty = $inventory['quantity'] + $item['quantity'];
-                $new_avg_cost = (($inventory['quantity'] * $inventory['avg_cost']) + ($item['quantity'] * $item['unit_cost'])) / $new_qty;
-                $stmtUpdate = $pdo->prepare("UPDATE inventory SET quantity = :qty, avg_cost = :avg_cost, last_purchase_price = :unit_cost WHERE product_id = :product_id");
+                $new_qty = $inventory['stock_in'] + $item['quantity'];
+                $stmtUpdate = $pdo->prepare("
+                    UPDATE inventory
+                    SET stock_in = :stock_in, last_updated = NOW()
+                    WHERE product_id = :product_id
+                ");
                 $stmtUpdate->execute([
-                    ':qty' => $new_qty,
-                    ':avg_cost' => $new_avg_cost,
-                    ':unit_cost' => $item['unit_cost'],
+                    ':stock_in' => $new_qty,
                     ':product_id' => $item['product_id']
                 ]);
             } else {
-                $stmtInsert = $pdo->prepare("INSERT INTO inventory (product_id, quantity, avg_cost, last_purchase_price)
-                                             VALUES (:product_id, :qty, :avg_cost, :unit_cost)");
+                $stmtInsert = $pdo->prepare("
+                    INSERT INTO inventory (product_id, stock_in, stock_out)
+                    VALUES (:product_id, :stock_in, 0)
+                ");
                 $stmtInsert->execute([
                     ':product_id' => $item['product_id'],
-                    ':qty' => $item['quantity'],
-                    ':avg_cost' => $item['unit_cost'],
-                    ':unit_cost' => $item['unit_cost']
+                    ':stock_in' => $item['quantity']
                 ]);
             }
         }
@@ -278,7 +346,7 @@ function create_sale(PDO $pdo, $customer_id, $items, $payment_method, $sales_cha
 
         // Calculate total
         foreach ($items as $item) {
-            $total_amount += $item['retail_price'] * $item['quantity'];
+            $total_amount += $item['unit_price'] * $item['quantity'];
         }
         $total_amount -= $discount;
 
@@ -292,7 +360,7 @@ function create_sale(PDO $pdo, $customer_id, $items, $payment_method, $sales_cha
         foreach ($items as $item) {
             $product_id = $item['product_id'];
             $quantity = $item['quantity'];
-            $retail_price = $item['retail_price'];
+            $unit_price = $item['unit_price'];
 
             // Check inventory
             $stmt = $pdo->prepare("SELECT current_stock FROM inventory WHERE product_id = ?");
@@ -307,8 +375,8 @@ function create_sale(PDO $pdo, $customer_id, $items, $payment_method, $sales_cha
 
             // Insert sale item
             $stmt = $pdo->prepare("INSERT INTO sale_items
-                (sale_id, product_id, quantity, retail_price) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$sale_id, $product_id, $quantity, $retail_price]);
+                (sale_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$sale_id, $product_id, $quantity, $unit_price]);
 
             // Update inventory
             $stmt = $pdo->prepare("UPDATE inventory SET stock_out = stock_out + ? WHERE product_id = ?");
@@ -344,7 +412,7 @@ function update_sale(PDO $pdo, $sale_id, $customer_id, $items, $payment_method, 
         // Recalculate total
         $total_amount = 0;
         foreach ($items as $item) {
-            $total_amount += $item['retail_price'] * $item['quantity'];
+            $total_amount += $item['unit_price'] * $item['quantity'];
         }
         $total_amount -= $discount;
 
@@ -358,7 +426,7 @@ function update_sale(PDO $pdo, $sale_id, $customer_id, $items, $payment_method, 
         foreach ($items as $item) {
             $product_id = $item['product_id'];
             $quantity = $item['quantity'];
-            $retail_price = $item['retail_price'];
+            $unit_price = $item['unit_price'];
 
             // Check inventory
             $stmt = $pdo->prepare("SELECT current_stock FROM inventory WHERE product_id = ?");
@@ -367,8 +435,8 @@ function update_sale(PDO $pdo, $sale_id, $customer_id, $items, $payment_method, 
             if ($stock < $quantity) throw new Exception("Not enough stock for product ID $product_id");
 
             $stmt = $pdo->prepare("INSERT INTO sale_items
-                (sale_id, product_id, quantity, retail_price) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$sale_id, $product_id, $quantity, $retail_price]);
+                (sale_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$sale_id, $product_id, $quantity, $unit_price]);
 
             // Update inventory
             $stmt = $pdo->prepare("UPDATE inventory SET stock_out = stock_out + ? WHERE product_id = ?");
@@ -412,7 +480,14 @@ function delete_sale(PDO $pdo, $sale_id) {
     }
 }
 
-function get_all_returns(PDO $pdo) {
+// ===========================
+// RETURNS MODULE FUNCTIONS
+// ===========================
+
+/**
+ * Fetch all product returns with related product name.
+ */
+function get_all_returns(PDO $pdo): array {
     $stmt = $pdo->prepare("
         SELECT r.*, p.name AS product_name
         FROM returns r
@@ -423,32 +498,52 @@ function get_all_returns(PDO $pdo) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function get_return_by_id(PDO $pdo, int $return_id) {
-    $stmt = $pdo->prepare("
-        SELECT *
-        FROM returns
-        WHERE return_id = :return_id
-    ");
+/**
+ * Fetch a single return record by ID.
+ */
+function get_return_by_id(PDO $pdo, int $return_id): ?array {
+    $stmt = $pdo->prepare("SELECT * FROM returns WHERE return_id = :return_id");
     $stmt->execute(['return_id' => $return_id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
 }
 
-function add_return(PDO $pdo, int $sale_id, int $product_id, int $quantity, string $reason) {
+/**
+ * Add a new product return and update related tables accordingly.
+ */
+function add_return(PDO $pdo, int $sale_id, int $product_id, int $quantity, string $reason): void {
     $pdo->beginTransaction();
     try {
-        // Check sale item quantity
-        $stmt = $pdo->prepare("SELECT quantity FROM sale_items WHERE sale_id = :sale_id AND product_id = :product_id");
+        // Validate sale item
+        $stmt = $pdo->prepare("
+            SELECT quantity, unit_price 
+            FROM sale_items 
+            WHERE sale_id = :sale_id AND product_id = :product_id
+        ");
         $stmt->execute(['sale_id' => $sale_id, 'product_id' => $product_id]);
         $sale_item = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$sale_item) throw new Exception("Product not found in sale.");
-        if ($quantity > $sale_item['quantity']) throw new Exception("Return quantity exceeds sold quantity.");
 
-        // Update inventory: stock_out decreases
-        $stmt = $pdo->prepare("UPDATE inventory SET stock_out = stock_out - :qty WHERE product_id = :product_id");
+        if (!$sale_item) {
+            throw new Exception("Product not found in sale.");
+        }
+
+        if ($quantity > $sale_item['quantity']) {
+            throw new Exception("Return quantity exceeds sold quantity.");
+        }
+
+        // Adjust inventory (reduce stock_out)
+        $stmt = $pdo->prepare("
+            UPDATE inventory 
+            SET stock_out = stock_out - :qty 
+            WHERE product_id = :product_id
+        ");
         $stmt->execute(['qty' => $quantity, 'product_id' => $product_id]);
 
-        // Insert return
-        $stmt = $pdo->prepare("INSERT INTO returns (sale_id, product_id, quantity, reason) VALUES (:sale_id, :product_id, :quantity, :reason)");
+        // Insert return record
+        $stmt = $pdo->prepare("
+            INSERT INTO returns (sale_id, product_id, quantity, reason, return_date)
+            VALUES (:sale_id, :product_id, :quantity, :reason, NOW())
+        ");
         $stmt->execute([
             'sale_id' => $sale_id,
             'product_id' => $product_id,
@@ -456,69 +551,161 @@ function add_return(PDO $pdo, int $sale_id, int $product_id, int $quantity, stri
             'reason' => $reason
         ]);
 
-        // Update sale total
+        // Adjust sale total
         $stmt = $pdo->prepare("
             UPDATE sales s
             JOIN sale_items si ON s.sale_id = si.sale_id
-            SET s.total_amount = s.total_amount - (:qty * si.retail_price)
+            SET s.total_amount = s.total_amount - (:qty * si.unit_price)
             WHERE s.sale_id = :sale_id AND si.product_id = :product_id
         ");
-        $stmt->execute(['qty' => $quantity, 'sale_id' => $sale_id]);
+        $stmt->execute([
+            'qty' => $quantity,
+            'sale_id' => $sale_id,
+            'product_id' => $product_id
+        ]);
 
         $pdo->commit();
-    } catch(Exception $e) {
+    } catch (Exception $e) {
         $pdo->rollBack();
         throw $e;
     }
 }
 
-function edit_return(PDO $pdo, int $return_id, int $sale_id, int $product_id, int $quantity, string $reason) {
+/**
+ * Edit an existing product return safely.
+ * Reverses previous effects, then applies new values in a single transaction.
+ */
+function edit_return(PDO $pdo, int $return_id, int $sale_id, int $product_id, int $quantity, string $reason): void {
     $pdo->beginTransaction();
     try {
         $old = get_return_by_id($pdo, $return_id);
-        if (!$old) throw new Exception("Return not found.");
+        if (!$old) {
+            throw new Exception("Return not found.");
+        }
 
-        // Reverse previous return
-        $stmt = $pdo->prepare("UPDATE inventory SET stock_out = stock_out + :qty WHERE product_id = :product_id");
-        $stmt->execute(['qty' => $old['quantity'], 'product_id' => $old['product_id']]);
+        // Validate sale item for new data
+        $stmt = $pdo->prepare("
+            SELECT quantity, unit_price 
+            FROM sale_items 
+            WHERE sale_id = :sale_id AND product_id = :product_id
+        ");
+        $stmt->execute(['sale_id' => $sale_id, 'product_id' => $product_id]);
+        $sale_item = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $stmt = $pdo->prepare("UPDATE sales s JOIN sale_items si ON s.sale_id = si.sale_id SET s.total_amount = s.total_amount + (:qty * si.retail_price) WHERE s.sale_id = :sale_id AND si.product_id = :product_id");
-        $stmt->execute(['qty' => $old['quantity'], 'sale_id' => $old['sale_id'], 'product_id' => $old['product_id']]);
+        if (!$sale_item) {
+            throw new Exception("Product not found in sale.");
+        }
 
-        // Add new return
-        add_return($pdo, $sale_id, $product_id, $quantity, $reason);
+        if ($quantity > $sale_item['quantity']) {
+            throw new Exception("Return quantity exceeds sold quantity.");
+        }
 
-        // Delete old return row (already reversed, new row added)
-        $stmt = $pdo->prepare("DELETE FROM returns WHERE return_id = :return_id");
-        $stmt->execute(['return_id' => $return_id]);
+        // STEP 1: Reverse previous return’s impact
+        $stmt = $pdo->prepare("
+            UPDATE inventory 
+            SET stock_out = stock_out + :old_qty 
+            WHERE product_id = :old_product
+        ");
+        $stmt->execute(['old_qty' => $old['quantity'], 'old_product' => $old['product_id']]);
+
+        $stmt = $pdo->prepare("
+            UPDATE sales s
+            JOIN sale_items si ON s.sale_id = si.sale_id
+            SET s.total_amount = s.total_amount + (:old_qty * si.unit_price)
+            WHERE s.sale_id = :old_sale AND si.product_id = :old_product
+        ");
+        $stmt->execute([
+            'old_qty' => $old['quantity'],
+            'old_sale' => $old['sale_id'],
+            'old_product' => $old['product_id']
+        ]);
+
+        // STEP 2: Apply new return logic (same as add_return but inline)
+        $stmt = $pdo->prepare("
+            UPDATE inventory 
+            SET stock_out = stock_out - :qty 
+            WHERE product_id = :product_id
+        ");
+        $stmt->execute(['qty' => $quantity, 'product_id' => $product_id]);
+
+        $stmt = $pdo->prepare("
+            UPDATE sales s
+            JOIN sale_items si ON s.sale_id = si.sale_id
+            SET s.total_amount = s.total_amount - (:qty * si.unit_price)
+            WHERE s.sale_id = :sale_id AND si.product_id = :product_id
+        ");
+        $stmt->execute([
+            'qty' => $quantity,
+            'sale_id' => $sale_id,
+            'product_id' => $product_id
+        ]);
+
+        // STEP 3: Update return record itself
+        $stmt = $pdo->prepare("
+            UPDATE returns
+            SET sale_id = :sale_id,
+                product_id = :product_id,
+                quantity = :quantity,
+                reason = :reason,
+                return_date = NOW()
+            WHERE return_id = :return_id
+        ");
+        $stmt->execute([
+            'sale_id' => $sale_id,
+            'product_id' => $product_id,
+            'quantity' => $quantity,
+            'reason' => $reason,
+            'return_id' => $return_id
+        ]);
 
         $pdo->commit();
-    } catch(Exception $e) {
+    } catch (Exception $e) {
         $pdo->rollBack();
         throw $e;
     }
 }
 
-function delete_return(PDO $pdo, int $return_id) {
+/**
+ * Delete a product return and revert all effects safely.
+ */
+function delete_return(PDO $pdo, int $return_id): void {
     $pdo->beginTransaction();
     try {
         $r = get_return_by_id($pdo, $return_id);
-        if (!$r) throw new Exception("Return not found.");
+        if (!$r) {
+            throw new Exception("Return not found.");
+        }
 
-        // Reverse inventory
-        $stmt = $pdo->prepare("UPDATE inventory SET stock_out = stock_out + :qty WHERE product_id = :product_id");
-        $stmt->execute(['qty' => $r['quantity'], 'product_id' => $r['product_id']]);
+        // Reverse inventory adjustment
+        $stmt = $pdo->prepare("
+            UPDATE inventory 
+            SET stock_out = stock_out + :qty 
+            WHERE product_id = :product_id
+        ");
+        $stmt->execute([
+            'qty' => $r['quantity'],
+            'product_id' => $r['product_id']
+        ]);
 
-        // Update sale total
-        $stmt = $pdo->prepare("UPDATE sales s JOIN sale_items si ON s.sale_id = si.sale_id SET s.total_amount = s.total_amount + (:qty * si.retail_price) WHERE s.sale_id = :sale_id AND si.product_id = :product_id");
-        $stmt->execute(['qty' => $r['quantity'], 'sale_id' => $r['sale_id'], 'product_id' => $r['product_id']]);
+        // Reverse sales total
+        $stmt = $pdo->prepare("
+            UPDATE sales s
+            JOIN sale_items si ON s.sale_id = si.sale_id
+            SET s.total_amount = s.total_amount + (:qty * si.unit_price)
+            WHERE s.sale_id = :sale_id AND si.product_id = :product_id
+        ");
+        $stmt->execute([
+            'qty' => $r['quantity'],
+            'sale_id' => $r['sale_id'],
+            'product_id' => $r['product_id']
+        ]);
 
-        // Delete return
+        // Remove the return record
         $stmt = $pdo->prepare("DELETE FROM returns WHERE return_id = :return_id");
         $stmt->execute(['return_id' => $return_id]);
 
         $pdo->commit();
-    } catch(Exception $e) {
+    } catch (Exception $e) {
         $pdo->rollBack();
         throw $e;
     }
@@ -778,12 +965,18 @@ function get_logs(PDO $pdo, array $filters = []) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function log_action(PDO $pdo, string $user, string $action, string $module, ?int $record_id, string $details) {
+function log_action(PDO $pdo, $user_id, $action, $module, $record_id = null, $details = null) {
     $stmt = $pdo->prepare("
-        INSERT INTO logs (user, action, module, record_id, details, timestamp)
-        VALUES (?, ?, ?, ?, ?, NOW())
+        INSERT INTO logs (user_id, action, module, record_id, details)
+        VALUES (:user_id, :action, :module, :record_id, :details)
     ");
-    $stmt->execute([$user, $action, $module, $record_id, $details]);
+    $stmt->execute([
+        ':user_id' => $user_id,
+        ':action' => $action,
+        ':module' => $module,
+        ':record_id' => $record_id,
+        ':details' => $details
+    ]);
 }   
 
 // SETTINGS

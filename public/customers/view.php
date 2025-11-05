@@ -28,6 +28,7 @@ if (!$customer) {
 </ul>
 
 <a href="edit.php?id=<?= $id ?>">Edit</a> | 
-<a href="delete.php?id=<?= $id ?>" onclick="return confirm('Delete this customer?');">Delete</a>
+<a href="delete.php?id=<?= $id ?>" onclick="return confirm('Delete this customer?');">Delete</a> |
+<a href="index.php">Back to List</a>
 
 <?php include '../../includes/footer.php'; ?>
